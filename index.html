@@ -64,13 +64,14 @@
       --font-sans: "SUIT Variable", "Noto Sans KR", Apple SD Gothic Neo, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
       --font-fancy: "Autography", "Hakgyoansim Geurimilgi", "SUIT Variable", system-ui, -apple-system, "Noto Sans KR", sans-serif;
 
-      --draw-dur: 2.3s;
-      --fill-dur: 2.2s;
-      --per-letter: .1s;
-      --fill-gap: 1.0s;
-      --inv-track: .02em; /* 원하시면 값만 조절하면 됩니다 */
+      /* ↓↓↓ 글씨 쓰는 속도 빠르게 (기존 대비 ↑) */
+      --draw-dur: 1.25s;   /* 선 그리기 */
+      --fill-dur: 1.20s;   /* 채움 */
+      --per-letter: .08s;  /* 글자 간 간격 */
+      --fill-gap: .60s;    /* 선→채움 지연 */
 
-      --bride-nudge: 0.7px; /* ← 원하는 만큼 조절 (3~10px 추천) */
+      --inv-track:.02em;
+      --bride-nudge:.7px;
     }
     *{box-sizing:border-box}
     html{font-size:16px}
@@ -413,10 +414,10 @@
     .hero-svg .stroke { filter: none; }  /* drop-shadow 제거 */
     @media (max-width: 480px) {
       :root{
-        --draw-dur: 2.8s;
-        --fill-dur: 1.6s;
-        --per-letter: .20s;
-        --fill-gap: 1.2s;
+        --draw-dur: 1.15s;
+        --fill-dur: 1.10s;
+        --per-letter: .10s;
+        --fill-gap: .55s;
       }
     }
 
@@ -1100,39 +1101,49 @@
         document.head.appendChild(l);
       }
 
-      /* 인터뷰 reveal (강화 + 스태거 + 1회만) */
-      (function setupInterviewReveal(){
-        const block   = document.getElementById('interview');
+      /* 인터뷰 reveal (반복 재생 + 스태거) */
+      (function setupInterviewRevealRepeat(){
+        const block = document.getElementById('interview');
         if(!block) return;
 
-        const qs      = [...block.querySelectorAll('.inter-q')];
-        const groups  = [...block.querySelectorAll('.bubble_container')];
+        const qs     = [...block.querySelectorAll('.inter-q')];
+        const groups = [...block.querySelectorAll('.bubble_container')];
 
-        // 질문 타이틀: 살짝 먼저
+        // 질문 타이틀: 뷰포트 in/out 에 따라 토글(반복)
         const ioQ = new IntersectionObserver((ents)=>{
           ents.forEach(e=>{
             if(e.isIntersecting){
+              // 재생을 위해 리셋 후 다시 붙이기
+              e.target.classList.remove('show');
+              void e.target.offsetWidth;       // reflow로 애니 초기화
               e.target.classList.add('show');
-              ioQ.unobserve(e.target); // 한 번만
+            }else{
+              e.target.classList.remove('show');
             }
           });
-        }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+        }, { threshold: 0.35, rootMargin: '0px 0px -8% 0px' });
         qs.forEach(q=> ioQ.observe(q));
 
-        // 말풍선 그룹: 내부 버블에 스태거(delay) 부여
+        // 말풍선 그룹: 스태거 + 반복
         const ioB = new IntersectionObserver((ents)=>{
           ents.forEach(e=>{
-            if(!e.isIntersecting) return;
             const boxes = [...e.target.querySelectorAll('.bubble_box')];
-            boxes.forEach((box,i)=>{
-              box.style.setProperty('--delay', `${i*120}ms`); // 0, 120, 240ms …
-              box.classList.add('show');
-            });
-            ioB.unobserve(e.target); // 한 번만
+            if(e.isIntersecting){
+              boxes.forEach((box,i)=>{
+                box.style.setProperty('--delay', `${i*120}ms`);
+                // 매번 재생되도록 리셋→재적용
+                box.classList.remove('show');
+                void box.offsetWidth;
+                box.classList.add('show');
+              });
+            }else{
+              boxes.forEach(box=> box.classList.remove('show'));
+            }
           });
-        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        }, { threshold: 0.35, rootMargin: '0px 0px -8% 0px' });
         groups.forEach(g=> ioB.observe(g));
       })();
+
 
 
       /* D-DAY */
@@ -1428,7 +1439,22 @@
       })();
 
 
+      (function initGoogleMap(){
+        const el = document.getElementById('map');
+        if(!el) return;
 
+        const q = encodeURIComponent('서울 동작구 보라매로5길 15 더에스비웨딩컨벤션');
+        el.innerHTML =
+          `<iframe
+              title="map"
+              width="100%"
+              height="300"
+              style="border:0"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              src="https://maps.google.com/maps?q=${q}&t=m&z=16&output=embed">
+          </iframe>`;
+      })();
     });
 
       // data-w 값(px)을 --line-w 커스텀 변수로 반영
