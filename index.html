@@ -372,9 +372,7 @@
       .card.center{ background: transparent; box-shadow: none; border-radius: 0; padding: 0; margin: 0; }
     }
 
-    /* 등장 애니 */
-    .hero-svg .wgm-line{ visibility: hidden; }
-    .hero-svg.wgm-ready .wgm-line{ visibility: visible; }
+    .hero-svg .wgm-line{ visibility: visible !important; }
 
     .wgm-row{
       transform-origin: 50% 50%;
@@ -993,7 +991,8 @@
         <p class="row"><b>🚗 자가용 이용시</b></p>
         <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
           <li>
-            내비게이션에 <b>전문건설회관</b>, <b>더에스비웨딩컨벤션</b> 검색
+            내비게이션에 <b>더에스비웨딩컨벤션</b> <br>
+            또는 <b>전문건설회관</b> 검색
           </li>
         </ul>
 
@@ -1055,65 +1054,66 @@
       const svg = document.querySelector('.hero-svg');
       if (!svg) return;
 
-      const vb = svg.viewBox.baseVal;         // 1000 x 600
-      const PADDING = 90;                      // 좌/우 안전 여백 (clip/mask와 동일)
-      const usableW = vb.width - PADDING * 2;  // 820
-
+      const vb = svg.viewBox?.baseVal;
       const block = svg.querySelector('#wgmBlock');
-      const cx = block && block.dataset.cx ? parseFloat(block.dataset.cx) : 500;
-
       const line1 = svg.querySelectorAll('.wgm-line[data-row="1"]');
       const line2 = svg.querySelectorAll('.wgm-line[data-row="2"]');
-      if (!line1.length || !line2.length) return;
+      if (!vb || !block || !line1.length || !line2.length) {
+        svg.classList.add('wgm-ready'); // 최소한 보이게
+        return;
+      }
 
+      const PADDING = 90;
+      const usableW = vb.width - PADDING * 2;
+      const cx = block.dataset.cx ? parseFloat(block.dataset.cx) : 500;
       const alreadyDone = svg.classList.contains('done');
       const oldBlockTransform = block.getAttribute('transform') || '';
 
-      // ✅ 끝난 뒤에는 측정용 클래스 토글을 건드리지 않아 재애니 방지
-      if (!alreadyDone) {
-        svg.classList.add('measuring');
-        block.setAttribute('transform', '');
-      } else {
-        // done 상태에서도 폭 계산을 위해 transform만 잠깐 빼지만 measuring 클래스는 건드리지 않음
-        block.setAttribute('transform', '');
-      }
-
-      // 1) 자연 상태로 폭 측정
-      [...line1, ...line2].forEach(t => t.removeAttribute('transform'));
-      const naturalW1 = Math.max(1, line1[0].getBBox().width);
-
-      // 2) 1줄 기준 배율(사진 유효폭에 맞춤, 키우진 않음)
-      const scale1 = Math.min(1, usableW / naturalW1);
-
-      // 3) 공통 적용 (평평한 좌표계에서 계산)
-      function applyToLine(nodeList, scale){
-        nodeList.forEach(t=>{
-          const b = t.getBBox();
-          const center = b.x + b.width / 2;
-          const nudge = parseFloat(t.getAttribute('data-dx') || '0');
-          const tx = (cx - center * scale) + nudge;
-          t.setAttribute('transform', `translate(${tx},0) scale(${scale},1)`);
-          t.setAttribute('text-anchor', 'middle');
-        });
-      }
-      applyToLine(line1, scale1);
-      applyToLine(line2, scale1);
-
-      // 4) 부모 변형 원복 + measuring 처리
-      if (oldBlockTransform) block.setAttribute('transform', oldBlockTransform);
-      else block.removeAttribute('transform');
-
-      if (!alreadyDone) {
-        svg.classList.remove('measuring');
-      }
-
-      // 표시
+      // 항상 보이도록 선반영
       svg.classList.add('wgm-ready');
+
+      try {
+        if (!alreadyDone) svg.classList.add('measuring');
+        block.setAttribute('transform', '');
+
+        [...line1, ...line2].forEach(t => t.removeAttribute('transform'));
+        const naturalW1 = Math.max(1, line1[0].getBBox().width);
+        const scale1 = Math.min(1, usableW / naturalW1);
+
+        const applyToLine = (nodes, scale) => {
+          nodes.forEach(t => {
+            const b = t.getBBox();
+            const center = b.x + b.width / 2;
+            const nudge = parseFloat(t.getAttribute('data-dx') || '0');
+            const tx = (cx - center * scale) + nudge;
+            t.setAttribute('transform', `translate(${tx},0) scale(${scale},1)`);
+            t.setAttribute('text-anchor', 'middle');
+          });
+        };
+        applyToLine(line1, scale1);
+        applyToLine(line2, scale1);
+      } finally {
+        if (oldBlockTransform) block.setAttribute('transform', oldBlockTransform);
+        else block.removeAttribute('transform');
+        svg.classList.remove('measuring');
+        svg.classList.add('wgm-ready'); // 보이는 상태 보증
+      }
     }
 
 
+
     // 리사이즈 때도 다시 맞춤(권장)
-    window.addEventListener('resize', fitHeroTwoLines);
+    (function(){
+      let rafId = null;
+      function onResize(){
+        if (rafId) return;
+        rafId = requestAnimationFrame(()=>{
+          rafId = null;
+          try { fitHeroTwoLines(); } catch(e){}
+        });
+      }
+      window.addEventListener('resize', onResize, { passive:true });
+    })();
 
 
     document.addEventListener('DOMContentLoaded', () => {
