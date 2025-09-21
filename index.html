@@ -65,7 +65,7 @@
       --font-fancy: "Autography", "Hakgyoansim Geurimilgi", "SUIT Variable", system-ui, -apple-system, "Noto Sans KR", sans-serif;
 
       --draw-dur: 2.3s;
-      --fill-dur: 1.7s;
+      --fill-dur: 2.2s;
       --per-letter: .1s;
       --fill-gap: 1.0s;
       --inv-track: .02em; /* 원하시면 값만 조절하면 됩니다 */
@@ -258,7 +258,7 @@
 
     .inter-q{ font-size: calc(1.8rem * .7); margin:4px 0 4px; text-align:center; font-weight:800; }
     .bubble_container{ display:grid; gap:2px; padding:0 0; margin:0 0 6px 0; }
-    .bubble_box{ display:flex;flex-direction:column;gap:1px; width:72%; margin:0 auto; opacity:0; transform:translateY(8px); transition:opacity .22s ease, transform .22s ease; }
+    .bubble_box{ display:flex;flex-direction:column;gap:1px; width:72%; margin:0 auto; opacity:0; transform:translateY(8px); transition:opacity .60s ease, transform .60s ease; }
     .bubble_box.show { opacity:1; transform:none }
     .bubble_box .name{ font-weight:900; font-size: calc(1.64rem * .7); color:#777; line-height:1.12; }
     .bubble_text{
@@ -602,7 +602,7 @@
             </g>
 
             <!-- 2줄 -->
-            <g class="wgm-row" style="--row-delay:2.2s">
+            <g class="wgm-row" style="--row-delay:1.8s">
               <!-- 윤곽선 -->
               <text x="500" y="476" class="stroke wgm-line" data-row="2" style="font-weight:700; font-size:85px;">
                 <tspan class="glyph stroke" style="--i:0">m</tspan>
@@ -840,7 +840,7 @@
         <div class="bubble_container">
           <div class="bubble_box left">
             <p class="name">상민</p>
-            <div class="bubble_wrapper"><p class="bubble_text">찌니프 ✨</p></div>
+            <div class="bubble_wrapper"><p class="bubble_text">아자찌니 ✨</p></div>
           </div>
           <div class="bubble_box right">
             <p class="name">진희</p>
