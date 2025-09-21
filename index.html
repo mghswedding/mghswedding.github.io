@@ -65,8 +65,8 @@
       --font-fancy: "Autography", "Hakgyoansim Geurimilgi", "SUIT Variable", system-ui, -apple-system, "Noto Sans KR", sans-serif;
 
       --draw-dur: 2.3s;
-      --fill-dur: 1.1s;
-      --per-letter: .14s;
+      --fill-dur: 1.7s;
+      --per-letter: .1s;
       --fill-gap: 1.0s;
       --inv-track: .02em; /* 원하시면 값만 조절하면 됩니다 */
 
@@ -1338,32 +1338,35 @@
       })();
 
       /* 글씨 쓰는 동안만 mask/clip 꺼서 깜빡임 제거 (필기 애니메이션은 유지) */
+      /* 글씨 쓰는 동안만 mask/clip 꺼서 깜빡임 제거 (필기 애니메이션은 유지) */
       (function squashWhiteFlicker(){
         const svg = document.querySelector('.hero-svg');
         if(!svg) return;
 
-        // 애니 구간 시작: 마스크/클립 일시 해제
         svg.classList.add('animfix');
 
-        // 1줄(fill) 마지막 글리프 애니가 끝나면 원복 + 고정
+        // ✅ 마지막 줄의 마지막 fill 글리프를 기준으로 종료 처리
+        const rows = svg.querySelectorAll('.wgm-row');
+        const lastRow = rows[rows.length - 1];
         const lastGlyph =
-          svg.querySelector('.wgm-row:first-of-type .wgm-line:last-of-type .glyph.fill:last-of-type') ||
-          svg.querySelector('.wgm-row:first-of-type .glyph:last-of-type');
+          (lastRow && lastRow.querySelector('.wgm-line:last-of-type .glyph.fill:last-of-type')) ||
+          svg.querySelector('.glyph.fill:last-of-type'); // 폴백
 
         function done(){
           svg.classList.remove('animfix'); // 마스크/클립 원복
-          svg.classList.add('done');       // ✅ 이후엔 애니 완전 차단(고정)
+          svg.classList.add('done');       // 이후 재생하지 않음
           lastGlyph && lastGlyph.removeEventListener('animationend', done);
         }
 
         if (lastGlyph) {
           lastGlyph.addEventListener('animationend', done);
-          setTimeout(done, 6000); // 안전망
+          setTimeout(done, 8000); // 안전망(필요시 조절)
         } else {
           svg.classList.remove('animfix');
-          svg.classList.add('done'); // 타깃 못찾아도 고정
+          svg.classList.add('done');
         }
       })();
+
 
 
     });
