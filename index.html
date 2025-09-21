@@ -277,6 +277,17 @@
     #invitation .poem{ font-size:1.02rem; line-height:1.45; white-space:pre-line; margin:0; }
     #invitation .small{ font-size:1.0rem }
 
+    /* INVITATION 이름 줄 간격만 타이트하게 */
+    #invitation .small p { 
+      margin: 0;              /* 기본 위/아래 마진 제거 */
+      line-height: 1.35;      /* 줄 높이 살짝만 */
+    }
+
+    /* 바로 다음 p(= 신부 줄)만 살짝 띄우기 */
+    #invitation .small p + p { 
+      margin-top: 4px;        /* 필요하면 2~6px로 조절 */
+    }
+
     .icon-chry{ display:inline-flex; vertical-align:-2px; margin-right:4px }
     .icon-chry svg{ width:1.05em; height:1.05em; }
     .navi{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:center; justify-items:center; }
@@ -374,6 +385,71 @@
     .hero-svg.done .glyph.stroke{
       stroke-dashoffset: 0 !important; /* 선 그리기 최종값 유지 */
     }
+
+    /* 한 줄 유지 */
+    .name-line{
+      display:inline-flex;
+      align-items:baseline;
+      justify-content:flex-start;
+      gap:8px;
+      white-space:nowrap;
+    }
+
+    /* ✅ 왼쪽 정보(span)만 자간 변수 적용 */
+    .name-line .left-info{ letter-spacing: var(--track, normal); }
+
+    /* ===========================
+      ACCOUNT (새 디자인)
+      =========================== */
+    .account { }
+
+    .acc-accordion{ display:grid; gap:12px; }
+    .acc-accordion details{
+      background:#fff; border:1px solid #eee; border-radius:12px;
+      box-shadow:var(--shadow); overflow:hidden;
+    }
+    .acc-accordion summary{
+      position:relative; padding:14px 44px 14px 14px;
+      font-weight:800; font-size:1rem; background:#fafafa; cursor:pointer;
+      list-style:none; display:flex; align-items:center; justify-content:space-between;
+    }
+    .acc-accordion summary::after{
+      content:"▾"; position:absolute; right:12px; top:50%;
+      transform:translateY(-50%); font-size:14px; color:#9aa0a6;
+    }
+    .acc-accordion details[open] summary::after{ content:"▴"; }
+
+    .acc-rows{ padding:0 }
+    .acc-item{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px; border-top:1px dashed #e9e9e9; background:#fff;
+    }
+    .acc-item:first-child{ border-top:none; }
+    .acc-left{ min-width:0; }
+    .acc-title{ font-weight:800; margin:0 0 6px 0; font-size:.95rem; color:#444; }
+    .acc-number{ font-family:var(--font-sans); font-size:1.02rem; font-weight:800; letter-spacing:.02em; }
+    .acc-bank{ font-size:.88rem; color:var(--muted); margin-top:2px; }
+
+    .btn-copy.copy{
+      flex:0 0 auto; border:1px solid #e1e1e1; background:#fff; border-radius:10px;
+      font-size:.86rem; padding:8px 10px; cursor:pointer;
+    }
+    .btn-copy.copy:active{ transform:translateY(1px) }
+
+
+    /* 계좌 토글 색상: 신랑=연하늘, 신부=연핑크 */
+    #acc-groom{ border-color:#d5ecff; }
+    #acc-groom > summary{ background:#eaf6ff; }
+
+    #acc-bride{ border-color:#ffe1ea; }
+    #acc-bride > summary{ background:#fff0f5; }
+
+    /* 열렸을 때 화살표 색상 살짝 맞춤(선택) */
+    #acc-groom[open] > summary::after{ color:#68a9da; }
+    #acc-bride[open] > summary::after{ color:#e38cab; }
+
+    #acc-groom .acc-item{ background:#ffffff; }   /* 필요 시 #f7fbff 등 아주 연하게 변경 가능 */
+    #acc-bride .acc-item{ background:#ffffff; }   /* 필요 시 #fff6fa 등 아주 연하게 변경 가능 */
 
   </style>
 </head>
@@ -513,9 +589,10 @@
       <div class="divider"></div>
       <div class="small">
         <p><span class="muted">이제영, 윤혜정의 아들</span> <b>신랑 이상민</b></p>
-        <p>
-          <span class="muted">
+        <p class="name-line" data-track="-0.06em">
+          <span class="muted left-info">
             <span class="icon-chry" aria-hidden="true">
+              <!-- SVG 그대로 -->
               <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="국화">
                 <circle cx="24" cy="24" r="4.5" fill="#ffdf7e"/>
                 <g fill="#f2b7c0">
@@ -540,51 +617,82 @@
             </span>
             이종명, 이정연의 딸
           </span>
-          <b> 신부 이진희</b>
+          <b class="bride">신부 이진희</b>
         </p>
+
       </div>
     </section>
 
-    <!-- ACCOUNT NUMBER -->
+    <!-- ACCOUNT NUMBER (새 디자인) -->
     <section class="account">
       <h2 class="section-title">ACCOUNT NUMBER</h2>
       <p class="small center muted">부담 갖지 않으셔도 됩니다.<br>필요하신 분만 이용해주세요.</p>
 
-      <div class="grid cols-2">
-        <details class="groom">
-          <summary>신랑측 <span>▼</span></summary>
-          <div class="rows small">
-            <div class="row" style="justify-content:flex-start"><b>신랑 계좌</b></div>
-            <div class="row" style="justify-content:flex-start">카카오뱅크 <span class="muted">(예금주 : 이상민)</span></div>
-            <div class="row"><span>계좌번호</span> <span class="copy" data-copy="79421200552">79421200552</span></div>
+      <div class="acc-accordion">
+        <!-- 신랑측 -->
+        <details id="acc-groom">
+          <summary>신랑측</summary>
+          <div class="acc-rows">
+            <!-- 신랑 계좌 -->
+            <div class="acc-item">
+              <div class="acc-left">
+                <p class="acc-title">신랑</p>
+                <div class="acc-number">79421200552</div>
+                <div class="acc-bank">카카오뱅크 (예금주 : 이상민)</div>
+              </div>
+              <button class="btn-copy copy" data-copy="79421200552">복사</button>
+            </div>
 
-            <div class="divider"></div>
+            <!-- 신랑혼주: 아버지 -->
+            <div class="acc-item">
+              <div class="acc-left">
+                <p class="acc-title">신랑 아버지</p>
+                <div class="acc-number">01052030725</div>
+                <div class="acc-bank">기업은행 (예금주 : 이제영)</div>
+              </div>
+              <button class="btn-copy copy" data-copy="01052030725">복사</button>
+            </div>
 
-            <div class="row" style="justify-content:flex-start"><b>신랑혼주 계좌</b></div>
-            <div class="row" style="justify-content:flex-start">기업은행 <span class="muted">(예금주 : 이제영)</span></div>
-            <div class="row"><span>계좌번호</span> <span class="copy" data-copy="010-520307-25">010-520307-25</span></div>
-
-            <div class="row" style="justify-content:flex-start; margin-top:6px">우리은행 <span class="muted">(예금주 : 윤혜정)</span></div>
-            <div class="row"><span>계좌번호</span> <span class="copy" data-copy="1002-447-128328">1002-447-128328</span></div>
+            <!-- 신랑혼주: 어머니 -->
+            <div class="acc-item">
+              <div class="acc-left">
+                <p class="acc-title">신랑 어머니</p>
+                <div class="acc-number">1002447128328</div>
+                <div class="acc-bank">우리은행 (예금주 : 윤혜정)</div>
+              </div>
+              <button class="btn-copy copy" data-copy="1002447128328">복사</button>
+            </div>
           </div>
         </details>
 
-        <details class="bride">
-          <summary>신부측 <span>▼</span></summary>
-          <div class="rows small">
-            <div class="row" style="justify-content:flex-start"><b>신부 계좌</b></div>
-            <div class="row" style="justify-content:flex-start">하나은행 <span class="muted">(예금주 : 이진희)</span></div>
-            <div class="row"><span>계좌번호</span> <span class="copy" data-copy="73291008224907">73291008224907</span></div>
+        <!-- 신부측 -->
+        <details id="acc-bride">
+          <summary>신부측</summary>
+          <div class="acc-rows">
+            <!-- 신부 계좌 -->
+            <div class="acc-item">
+              <div class="acc-left">
+                <p class="acc-title">신부</p>
+                <div class="acc-number">73291008224907</div>
+                <div class="acc-bank">하나은행 (예금주 : 이진희)</div>
+              </div>
+              <button class="btn-copy copy" data-copy="73291008224907">복사</button>
+            </div>
 
-            <div class="divider"></div>
-
-            <div class="row" style="justify-content:flex-start"><b>신부혼주 계좌</b></div>
-            <div class="row" style="justify-content:flex-start">지역농축협 <span class="muted">(예금주 : 이정연)</span></div>
-            <div class="row"><span>계좌번호</span> <span class="copy" data-copy="13003652103656">13003652103656</span></div>
+            <!-- 신부혼주: 어머니 -->
+            <div class="acc-item">
+              <div class="acc-left">
+                <p class="acc-title">신부 어머니</p>
+                <div class="acc-number">13003652103656</div>
+                <div class="acc-bank">지역농축협 (예금주 : 이정연)</div>
+              </div>
+              <button class="btn-copy copy" data-copy="13003652103656">복사</button>
+            </div>
           </div>
         </details>
       </div>
     </section>
+
 
     <!-- D-DAY -->
     <section class="card center" id="dday">
@@ -740,6 +848,37 @@
         </div>
       </div>
     </section>
+
+    <!-- TRANSPORTATION -->
+    <section>
+      <h2 class="section-title">TRANSPORTATION</h2>
+      <div class="card small">
+        
+        <p class="row"><b>🚗 자가용 이용시</b></p>
+        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
+          <li>
+            내비게이션에 <b>전문건설회관</b>, <b>더에스비웨딩컨벤션</b> 검색
+          </li>
+        </ul>
+
+
+        <p class="row"><b>🚇 지하철 이용시</b></p>
+        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
+          <li><b>신림선 보라매병원역</b> 하차</li>
+          <li>2번 출구와 전문건설회관 건물 연결</li>
+          <li>엘리베이터 탑승 후 3층 더에스비웨딩컨벤션 이동</li>
+        </ul>
+
+        <p class="row"><b>🅿️ 주차</b></p>
+        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
+          <li>
+            전문건설회관 지하주차장 이용 <br> (연회장에서 차량번호 등록 시 3시간 무료주차)
+          </li>
+        </ul>
+      </div>
+    </section>
+
+
 
     <!-- ICS / 캘린더 버튼 -->
     <section class="center" style="margin-top:12px">
@@ -1149,7 +1288,42 @@
 
     });
 
-    
+      // data-w 값(px)을 --line-w 커스텀 변수로 반영
+    document.querySelectorAll('.name-line[data-track]').forEach(el=>{
+      el.style.setProperty('--track', el.getAttribute('data-track'));
+    });
+  </script>
+
+  <script>
+    // 계좌: 복사 버튼 (account 섹션으로 이벤트 위임)
+    (function(){
+      const acc = document.querySelector('.account');
+      if(!acc) return;
+
+      acc.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button.btn-copy.copy');
+        if(!btn) return;
+        const text = btn.dataset.copy || '';
+        if(!text) return;
+        navigator.clipboard.writeText(text).then(()=>{
+          if (!btn.dataset.old) btn.dataset.old = btn.textContent;
+          btn.textContent = '복사됨';
+          setTimeout(()=>{ btn.textContent = btn.dataset.old || '복사'; delete btn.dataset.old; }, 1200);
+        }).catch(()=>{ /* 필요 시 오류 처리 */ });
+      });
+
+      // 아코디언: 클릭한 섹션만 토글 (요청 시 한 번에 하나만 열리게 하려면 주석 해제)
+      acc.querySelectorAll('.acc-accordion details > summary').forEach(sum=>{
+        sum.addEventListener('click', (e)=>{
+          e.preventDefault();           // 기본 토글 막고
+          const host = sum.parentElement;
+          host.open = !host.open;       // 해당 섹션만 토글
+
+          // 아래 주석을 해제하면 '동시에 하나만 열림' 동작
+          // acc.querySelectorAll('.acc-accordion details').forEach(d => { if (d!==host) d.open = false; });
+        });
+      });
+    })();
   </script>
 
 </body>
