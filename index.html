@@ -562,6 +562,25 @@
       margin-top: 16px; /* 16px → 20px 등 원하는 만큼 조절 */
     }
 
+    /* === 글자 애니메이션 1회만 (자연스럽게 고정) === */
+    /* 줄 기울기/등장, 상단 둥실 효과 모두 현재 프레임에서 일시정지 */
+    .hero-svg.done .wgm-row,
+    .hero-svg.done .svg-top{
+      animation-play-state: paused !important;
+    }
+
+    /* 글리프는 이미 최종 상태로 고정 (필기/채움 값 유지) */
+    .hero-svg.done .glyph,
+    .hero-svg.done .glyph.stroke,
+    .hero-svg.done .glyph.fill{
+      animation: none !important;
+      opacity: 1 !important;
+    }
+    .hero-svg.done .glyph.stroke{
+      stroke-dashoffset: 0 !important;
+    }
+
+
   </style>
 </head>
 <body>
@@ -1047,10 +1066,17 @@
       const line2 = svg.querySelectorAll('.wgm-line[data-row="2"]');
       if (!line1.length || !line2.length) return;
 
-      // 0) 측정 동안 애니/변형 잠깐 OFF
-      svg.classList.add('measuring');
+      const alreadyDone = svg.classList.contains('done');
       const oldBlockTransform = block.getAttribute('transform') || '';
-      block.setAttribute('transform', '');
+
+      // ✅ 끝난 뒤에는 측정용 클래스 토글을 건드리지 않아 재애니 방지
+      if (!alreadyDone) {
+        svg.classList.add('measuring');
+        block.setAttribute('transform', '');
+      } else {
+        // done 상태에서도 폭 계산을 위해 transform만 잠깐 빼지만 measuring 클래스는 건드리지 않음
+        block.setAttribute('transform', '');
+      }
 
       // 1) 자연 상태로 폭 측정
       [...line1, ...line2].forEach(t => t.removeAttribute('transform'));
@@ -1073,14 +1099,18 @@
       applyToLine(line1, scale1);
       applyToLine(line2, scale1);
 
-      // 4) 부모 변형 원복 + 애니 재개
+      // 4) 부모 변형 원복 + measuring 처리
       if (oldBlockTransform) block.setAttribute('transform', oldBlockTransform);
       else block.removeAttribute('transform');
-      svg.classList.remove('measuring');
+
+      if (!alreadyDone) {
+        svg.classList.remove('measuring');
+      }
 
       // 표시
       svg.classList.add('wgm-ready');
     }
+
 
     // 리사이즈 때도 다시 맞춤(권장)
     window.addEventListener('resize', fitHeroTwoLines);
