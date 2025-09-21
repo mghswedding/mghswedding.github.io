@@ -68,6 +68,9 @@
       --fill-dur: 1.1s;
       --per-letter: .14s;
       --fill-gap: 1.0s;
+      --inv-track: .02em; /* 원하시면 값만 조절하면 됩니다 */
+
+      --bride-nudge: 0.7px; /* ← 원하는 만큼 조절 (3~10px 추천) */
     }
     *{box-sizing:border-box}
     html{font-size:16px}
@@ -288,6 +291,25 @@
       margin-top: 4px;        /* 필요하면 2~6px로 조절 */
     }
 
+    /* 두 줄 공통: 같은 자간 + 커닝/합자 끔 */
+    #invitation .inv-rows .left-info,
+    #invitation .inv-rows b{
+      letter-spacing: var(--inv-track); /* 기본 .02em */
+      font-kerning: none;
+      font-variant-ligatures: none;
+      font-feature-settings: "kern" 0, "liga" 0;
+      text-rendering: optimizeSpeed;
+    }
+
+    /* 아이콘이 있는 신부 줄만 아주 미세하게 넓힘(시각 보정) */
+    #invitation .inv-rows .left-info:has(.icon-chry){
+      letter-spacing: calc(var(--inv-track) + .014em);
+    }
+
+    #invitation .inv-rows b.bride{
+      transform: translateX(calc(var(--bride-nudge) * -1));
+    }
+
     .icon-chry{ display:inline-flex; vertical-align:-2px; margin-right:4px }
     .icon-chry svg{ width:1.05em; height:1.05em; }
     .navi{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:center; justify-items:center; }
@@ -308,7 +330,7 @@
 
     .wgm-row{
       transform-origin: 50% 50%;
-      animation: wgmTiltDiag 1200ms cubic-bezier(.2,.65,.2,1) both;
+      animation: wgmTiltDiag var(--intro-dur, 700ms) cubic-bezier(.2,.65,.2,1) both;
       animation-delay: var(--row-delay, 0s);
     }
     @keyframes wgmTiltDiag{
@@ -344,10 +366,10 @@
     .hero-svg .stroke { filter: none; }  /* drop-shadow 제거 */
     @media (max-width: 480px) {
       :root{
-        --draw-dur: 1.2s;
-        --fill-dur: .6s;
-        --per-letter: .08s;
-        --fill-gap: .4s;
+        --draw-dur: 2.8s;
+        --fill-dur: 1.6s;
+        --per-letter: .20s;
+        --fill-gap: 1.2s;
       }
     }
 
@@ -487,6 +509,10 @@
       display: inline-flex;
     }
 
+    /* 화면 맨 위 여백 */
+    header.wrap {
+      margin-top: 16px; /* 16px → 20px 등 원하는 만큼 조절 */
+    }
 
   </style>
 </head>
@@ -576,7 +602,7 @@
             </g>
 
             <!-- 2줄 -->
-            <g class="wgm-row" style="--row-delay:1.5s">
+            <g class="wgm-row" style="--row-delay:2.2s">
               <!-- 윤곽선 -->
               <text x="500" y="476" class="stroke wgm-line" data-row="2" style="font-weight:700; font-size:85px;">
                 <tspan class="glyph stroke" style="--i:0">m</tspan>
@@ -923,7 +949,16 @@
       </div>
     </section>
 
-
+        <!-- ETC -->
+    <section>
+      <h2 class="section-title">ETC</h2>
+      <div class="card small">
+        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
+          <li><b>연회장 이용시간</b> : 13:30 ~ 15:30</li>
+          <li><b>1층 ATM 이용가능</b></li>
+        </ul>
+      </div>
+    </section>
 
     <!-- ICS / 캘린더 버튼 -->
     <section class="center" style="margin-top:12px">
