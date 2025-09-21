@@ -176,15 +176,6 @@
       animation: fillLetter 1.4s ease forwards;
       animation-delay: calc(var(--i) * 0.42s + 2.4s);
     }
-    @keyframes drawLetter{
-      0%   { opacity:1; stroke-dashoffset:1200; filter:blur(.2px) }
-      85%  { opacity:1; }
-      100% { opacity:1; stroke-dashoffset:0; }
-    }
-    @keyframes fillLetter{
-      from { opacity:0; transform: translateY(4px) scale(1.01); }
-      to   { opacity:1; transform: none; }
-    }
 
     .date-plain{
       color:#fff; line-height:1.42; display:inline-block; font-weight:500;
@@ -598,7 +589,7 @@
         " type="image/webp" sizes="100vw">
         <img
           class="hero-media"
-          src="./KakaoTalk_20250907_195152669.jpg"
+          src="./KakaoTalk_20250921_234047356.jpg"
           alt=""
           width="1920" height="1080"
           fetchpriority="high" decoding="async">
@@ -607,7 +598,7 @@
       <div class="dday-badge" id="ddayTop">D-90</div>
       <div class="spark-layer" id="sparkLayer"></div>
       <!-- === SVG 타이틀 === -->
-      <svg class="hero-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <svg class="hero-svg measuring" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs>
           <!-- 위쪽 곡선 페이드 마스크 -->
           <radialGradient id="loveGrad" cx="50%" cy="35%" r="75%">
@@ -1075,67 +1066,69 @@
       const svg = document.querySelector('.hero-svg');
       if (!svg) return;
 
-      const vb = svg.viewBox?.baseVal;
+      const vb = svg.viewBox.baseVal;         // 1000 x 600
+      const PADDING = 90;                      // 좌/우 안전 여백 (clip/mask와 동일)
+      const usableW = vb.width - PADDING * 2;  // 820
+
       const block = svg.querySelector('#wgmBlock');
+      const cx = block && block.dataset.cx ? parseFloat(block.dataset.cx) : 500;
+
       const line1 = svg.querySelectorAll('.wgm-line[data-row="1"]');
       const line2 = svg.querySelectorAll('.wgm-line[data-row="2"]');
-      if (!vb || !block || !line1.length || !line2.length) {
-        svg.classList.add('wgm-ready'); // 최소한 보이게
-        return;
-      }
+      if (!line1.length || !line2.length) return;
 
-      const PADDING = 90;
-      const usableW = vb.width - PADDING * 2;
-      const cx = block.dataset.cx ? parseFloat(block.dataset.cx) : 500;
       const alreadyDone = svg.classList.contains('done');
       const oldBlockTransform = block.getAttribute('transform') || '';
 
-      // 항상 보이도록 선반영
-      svg.classList.add('wgm-ready');
+      // ✅ 끝난 뒤에는 측정용 클래스 토글을 건드리지 않아 재애니 방지
+      block.setAttribute('transform', '');
 
-      try {
-        if (!alreadyDone) svg.classList.add('measuring');
-        block.setAttribute('transform', '');
+      // 1) 자연 상태로 폭 측정
+      [...line1, ...line2].forEach(t => t.removeAttribute('transform'));
+      const naturalW1 = Math.max(1, line1[0].getBBox().width);
 
-        [...line1, ...line2].forEach(t => t.removeAttribute('transform'));
-        const naturalW1 = Math.max(1, line1[0].getBBox().width);
-        const scale1 = Math.min(1, usableW / naturalW1);
+      // 2) 1줄 기준 배율(사진 유효폭에 맞춤, 키우진 않음)
+      const scale1 = Math.min(1, usableW / naturalW1);
 
-        const applyToLine = (nodes, scale) => {
-          nodes.forEach(t => {
-            const b = t.getBBox();
-            const center = b.x + b.width / 2;
-            const nudge = parseFloat(t.getAttribute('data-dx') || '0');
-            const tx = (cx - center * scale) + nudge;
-            t.setAttribute('transform', `translate(${tx},0) scale(${scale},1)`);
-            t.setAttribute('text-anchor', 'middle');
-          });
-        };
-        applyToLine(line1, scale1);
-        applyToLine(line2, scale1);
-      } finally {
-        if (oldBlockTransform) block.setAttribute('transform', oldBlockTransform);
-        else block.removeAttribute('transform');
-        svg.classList.remove('measuring');
-        svg.classList.add('wgm-ready'); // 보이는 상태 보증
-      }
-    }
-
-
-
-    // 리사이즈 때도 다시 맞춤(권장)
-    (function(){
-      let rafId = null;
-      function onResize(){
-        if (rafId) return;
-        rafId = requestAnimationFrame(()=>{
-          rafId = null;
-          try { fitHeroTwoLines(); } catch(e){}
+      // 3) 공통 적용 (평평한 좌표계에서 계산)
+      function applyToLine(nodeList, scale){
+        nodeList.forEach(t=>{
+          const b = t.getBBox();
+          const center = b.x + b.width / 2;
+          const nudge = parseFloat(t.getAttribute('data-dx') || '0');
+          const tx = (cx - center * scale) + nudge;
+          t.setAttribute('transform', `translate(${tx},0) scale(${scale},1)`);
+          t.setAttribute('text-anchor', 'middle');
         });
       }
-      window.addEventListener('resize', onResize, { passive:true });
-    })();
+      applyToLine(line1, scale1);
+      applyToLine(line2, scale1);
 
+      // 4) 부모 변형 원복 + measuring 처리
+      if (oldBlockTransform) block.setAttribute('transform', oldBlockTransform);
+      else block.removeAttribute('transform');
+
+      if (!alreadyDone) svg.classList.remove('measuring');
+
+      // 표시 + iOS 강제 리플로우로 위치 깜빡임 방지
+      svg.classList.add('wgm-ready');
+      void svg.offsetWidth;
+    }
+
+    // ⬇️ iOS 대응: resize 디바운스(+ orientationchange, pageshow) — 주소창 애니 중 잘못된 폭으로 재계산되는 것 방지
+    (function(){
+      let timer, rafId;
+      const onStableResize = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(() => fitHeroTwoLines());
+        }, 150); // 100~200ms 권장
+      };
+      window.addEventListener('resize', onStableResize, { passive: true });
+      window.addEventListener('orientationchange', onStableResize, { passive: true });
+      window.addEventListener('pageshow', () => setTimeout(fitHeroTwoLines, 0)); // bfcache 복귀 시
+    })();
 
     document.addEventListener('DOMContentLoaded', () => {
       /* prod에서 webp/avif srcset 활성화 + 프리로드 */
@@ -1164,9 +1157,8 @@
         const ioQ = new IntersectionObserver((ents)=>{
           ents.forEach(e=>{
             if(e.isIntersecting){
-              // 재생을 위해 리셋 후 다시 붙이기
               e.target.classList.remove('show');
-              void e.target.offsetWidth;       // reflow로 애니 초기화
+              void e.target.offsetWidth; // reflow로 애니 초기화
               e.target.classList.add('show');
             }else{
               e.target.classList.remove('show');
@@ -1182,7 +1174,6 @@
             if(e.isIntersecting){
               boxes.forEach((box,i)=>{
                 box.style.setProperty('--delay', `${i*120}ms`);
-                // 매번 재생되도록 리셋→재적용
                 box.classList.remove('show');
                 void box.offsetWidth;
                 box.classList.add('show');
@@ -1194,8 +1185,6 @@
         }, { threshold: 0.35, rootMargin: '0px 0px -8% 0px' });
         groups.forEach(g=> ioB.observe(g));
       })();
-
-
 
       /* D-DAY */
       const target = new Date("2025-12-13T14:00:00+09:00").getTime();
@@ -1220,7 +1209,7 @@
       function tick(){ const now = Date.now(); let diff = Math.max(0, target - now); refreshDday(diff); }
       tick(); setInterval(tick, 1000);
 
-      /* 복사 버튼 */
+      /* 복사 버튼 (전역: .copy) */
       document.addEventListener('click', (e)=>{
         const btn = e.target.closest('.copy');
         if(!btn) return;
@@ -1235,35 +1224,36 @@
       /* 라이트박스 */
       const thumbs = Array.from(document.querySelectorAll('#gallery picture img'));
       const lb = document.getElementById('lightbox');
-      const lbImg = lb.querySelector('img');
+      const lbImg = lb?.querySelector('img');
       const prevBtn = document.getElementById('lbPrev');
       const nextBtn = document.getElementById('lbNext');
       let idx = 0, touchStartX = 0;
 
       function openAt(i){
+        if (!lb || !lbImg) return;
         idx = (i + thumbs.length) % thumbs.length;
         const t = thumbs[idx];
         const full = t.getAttribute('data-full');
         lbImg.src = full || t.currentSrc || t.src;
         lb.classList.add('open');
       }
-      function closeLb(){ lb.classList.remove('open'); lbImg.src = ''; }
+      function closeLb(){ if(!lb||!lbImg) return; lb.classList.remove('open'); lbImg.src = ''; }
       function next(){ openAt(idx+1) }
       function prev(){ openAt(idx-1) }
 
       thumbs.forEach((img,i)=> img.addEventListener('click', ()=> openAt(i)));
-      lb.addEventListener('click', (e)=>{ if(e.target === lb) closeLb(); });
+      lb?.addEventListener('click', (e)=>{ if(e.target === lb) closeLb(); });
       document.addEventListener('keydown', (e)=>{
-        if(!lb.classList.contains('open')) return;
+        if(!lb?.classList.contains('open')) return;
         if(e.key === 'Escape') closeLb();
         if(e.key === 'ArrowRight') next();
         if(e.key === 'ArrowLeft') prev();
       });
-      nextBtn.addEventListener('click', (e)=>{ e.stopPropagation(); next(); });
-      prevBtn.addEventListener('click', (e)=>{ e.stopPropagation(); prev(); });
+      nextBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); next(); });
+      prevBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); prev(); });
 
-      lbImg.addEventListener('touchstart', (e)=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
-      lbImg.addEventListener('touchend', (e)=>{
+      lbImg?.addEventListener('touchstart', (e)=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+      lbImg?.addEventListener('touchend', (e)=>{
         const delta = e.changedTouches[0].clientX - touchStartX;
         if(Math.abs(delta) > 40){ delta < 0 ? next() : prev(); }
       }, {passive:true});
@@ -1368,7 +1358,7 @@
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(fitHeroTwoLines);
       } else {
-        window.addEventListener('load', fitHeroTwoLines);
+        window.addEventListener('load', fitHeroTwoLines, { once: true });
       }
 
       /* 보케 파티클(Canvas) */
@@ -1460,7 +1450,6 @@
       })();
 
       /* 글씨 쓰는 동안만 mask/clip 꺼서 깜빡임 제거 (필기 애니메이션은 유지) */
-      /* 글씨 쓰는 동안만 mask/clip 꺼서 깜빡임 제거 (필기 애니메이션은 유지) */
       (function squashWhiteFlicker(){
         const svg = document.querySelector('.hero-svg');
         if(!svg) return;
@@ -1489,7 +1478,6 @@
         }
       })();
 
-
       (function initGoogleMap(){
         const el = document.getElementById('map');
         if(!el) return;
@@ -1506,20 +1494,24 @@
               src="https://maps.google.com/maps?q=${q}&t=m&z=16&output=embed">
           </iframe>`;
       })();
+
+      // 초기 정렬(보장)
+      fitHeroTwoLines();
     });
 
-      // data-w 값(px)을 --line-w 커스텀 변수로 반영
+    // data-track 값을 --track 커스텀 변수로 반영
     document.querySelectorAll('.name-line[data-track]').forEach(el=>{
       el.style.setProperty('--track', el.getAttribute('data-track'));
     });
   </script>
 
+  <!-- 계좌 아코디언/복사: 별도 스코프 -->
   <script>
-    // 계좌: 복사 버튼 (account 섹션으로 이벤트 위임)
     (function(){
       const acc = document.querySelector('.account');
       if(!acc) return;
 
+      // 계좌: 복사 버튼 (account 섹션으로 이벤트 위임)
       acc.addEventListener('click', (e)=>{
         const btn = e.target.closest('button.btn-copy.copy');
         if(!btn) return;
@@ -1532,19 +1524,19 @@
         }).catch(()=>{ /* 필요 시 오류 처리 */ });
       });
 
-      // 아코디언: 클릭한 섹션만 토글 (요청 시 한 번에 하나만 열리게 하려면 주석 해제)
+      // 아코디언: 클릭한 섹션만 토글
       acc.querySelectorAll('.acc-accordion details > summary').forEach(sum=>{
         sum.addEventListener('click', (e)=>{
           e.preventDefault();           // 기본 토글 막고
           const host = sum.parentElement;
           host.open = !host.open;       // 해당 섹션만 토글
-
-          // 아래 주석을 해제하면 '동시에 하나만 열림' 동작
+          // 동시에 하나만 열리게 하려면 아래 주석 해제
           // acc.querySelectorAll('.acc-accordion details').forEach(d => { if (d!==host) d.open = false; });
         });
       });
     })();
   </script>
+
 
 </body>
 </html>
