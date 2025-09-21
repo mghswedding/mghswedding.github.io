@@ -256,19 +256,65 @@
     .interview .subtitle{ text-align:center; margin:0 0 6px 0; color:var(--muted); font-size:1rem; font-weight:400; }
     .interview-inner{ max-width:460px; margin:0 auto; }
 
-    .inter-q{ font-size: calc(1.8rem * .7); margin:4px 0 4px; text-align:center; font-weight:800; }
+    /* 강한 등장용 공통 지속시간(원하면 700~1100ms로 조절) */
+    :root{ --reveal-dur: 900ms; }
+
+    .inter-q{
+      font-size: calc(1.8rem * .7); margin:8px 0 6px; text-align:center; font-weight:800;
+      opacity:0; transform: translateY(14px);
+    }
+    .inter-q.show{
+      animation: qIn var(--reveal-dur) cubic-bezier(.2,.7,.2,1.1) forwards;
+    }
+    @keyframes qIn{
+      0%   { opacity:0; transform: translateY(16px) }
+      100% { opacity:1; transform: none }
+    }
+
     .bubble_container{ display:grid; gap:2px; padding:0 0; margin:0 0 6px 0; }
-    .bubble_box{ display:flex;flex-direction:column;gap:1px; width:72%; margin:0 auto; opacity:0; transform:translateY(8px); transition:opacity 1.2s ease, transform 1.2s ease; }
-    .bubble_box.show { opacity:1; transform:none }
+
+    .bubble_box{
+      display:flex; flex-direction:column; gap:1px; width:72%; margin:0 auto;
+      opacity:0; filter: blur(3px);
+      transform: translateY(22px) scale(.96);
+      will-change: transform, opacity, filter;
+    }
+    .bubble_box.left{  align-items:flex-start; transform: translate(-10px,22px) scale(.96); }
+    .bubble_box.right{ align-items:flex-end;   transform: translate( 10px,22px) scale(.96); }
+
     .bubble_box .name{ font-weight:900; font-size: calc(1.64rem * .7); color:#777; line-height:1.12; }
+
     .bubble_text{
       display:inline-block;border-radius:12px; padding: calc(12px * .7) calc(14px * .7);
       font-size: calc(1.8rem * .7); line-height:1.44; box-shadow:var(--shadow); max-width:100%;
-      word-break: keep-all; /* FIX: 말줄임/줄바꿈 안정화 */
+      word-break: keep-all;
     }
-    .bubble_box.left{ align-items:flex-start; } .bubble_box.right{ align-items:flex-end; }
-    .left .bubble_text{ background:#eaf6ff } .right .bubble_text{ background:var(--accent); color:#313131 }
+    .left .bubble_text{ background:#eaf6ff } 
+    .right .bubble_text{ background:var(--accent); color:#313131 }
 
+    /* 등장 애니메이션(스태거 지연은 JS가 넣어줌) */
+    .bubble_box.show{
+      animation: bubbleIn var(--reveal-dur) cubic-bezier(.2,.7,.2,1.1) forwards;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes bubbleIn{
+      0%   { opacity:0; filter:blur(3px); transform: translateY(28px) scale(.95); }
+      60%  { opacity:1; filter:blur(0);   transform: translateY(-4px) scale(1.02); }
+      100% { opacity:1; filter:blur(0);   transform: none; }
+    }
+
+    /* 말풍선 팝-섀도 */
+    .bubble_box.show .bubble_text{
+      animation: popShadow calc(var(--reveal-dur) * .9) ease-out forwards;
+      animation-delay: calc(var(--delay,0s) + 120ms);
+    }
+    @keyframes popShadow{
+      0%   { box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+      60%  { box-shadow: 0 14px 28px rgba(0,0,0,.18); }
+      100% { box-shadow: var(--shadow); }
+    }
+
+    /* 반응형(기존 크기 유지) */
     @media (max-width:430px){
       .inter-q{ font-size: calc(1.6rem * .7); margin:6px 0 4px; }
       .bubble_container{ gap:2px; margin-bottom:6px }
@@ -276,6 +322,7 @@
       .bubble_text{ font-size: calc(1.6rem * .7); padding: calc(10px * .7) calc(12px * .7); line-height:1.4; }
       .bubble_box .name{ font-size: calc(1.48rem * .7); }
     }
+
 
     #invitation .poem{ font-size:1.02rem; line-height:1.45; white-space:pre-line; margin:0; }
     #invitation .small{ font-size:1.0rem }
@@ -1053,27 +1100,40 @@
         document.head.appendChild(l);
       }
 
-      /* 인터뷰 reveal */
-      const interTargets = document.querySelectorAll('#interview .inter-q, #interview .bubble_box');
-      interTargets.forEach(el => { el.style.removeProperty('opacity'); el.style.removeProperty('transform'); });
-      const io = new IntersectionObserver((ents)=>ents.forEach(e=>e.target.classList.toggle('show', e.isIntersecting)), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-      [...interTargets].forEach(el=> io.observe(el));
+      /* 인터뷰 reveal (강화 + 스태거 + 1회만) */
+      (function setupInterviewReveal(){
+        const block   = document.getElementById('interview');
+        if(!block) return;
 
-      /* 지도 */
-      function initKakaoMap(){
-        if(!window.kakao || !kakao.maps) return;
-        const container = document.getElementById('map');
-        const center = new kakao.maps.LatLng(37.490617, 126.921312);
-        const map = new kakao.maps.Map(container, { center, level: 4 });
-        new kakao.maps.Marker({ map, position: center });
-      }
-      if (document.getElementById('map')) {
-        if (window.kakao && kakao.maps) initKakaoMap();
-        else {
-          document.getElementById('map').innerHTML =
-            '<iframe title="map" width="100%" height="300" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=%EC%84%9C%EC%9A%B8%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EB%B3%B4%EB%9D%BC%EB%A7%A4%EB%A1%9C5%EA%B8%B8%2015&t=m&z=16&output=embed"></iframe>';
-        }
-      }
+        const qs      = [...block.querySelectorAll('.inter-q')];
+        const groups  = [...block.querySelectorAll('.bubble_container')];
+
+        // 질문 타이틀: 살짝 먼저
+        const ioQ = new IntersectionObserver((ents)=>{
+          ents.forEach(e=>{
+            if(e.isIntersecting){
+              e.target.classList.add('show');
+              ioQ.unobserve(e.target); // 한 번만
+            }
+          });
+        }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+        qs.forEach(q=> ioQ.observe(q));
+
+        // 말풍선 그룹: 내부 버블에 스태거(delay) 부여
+        const ioB = new IntersectionObserver((ents)=>{
+          ents.forEach(e=>{
+            if(!e.isIntersecting) return;
+            const boxes = [...e.target.querySelectorAll('.bubble_box')];
+            boxes.forEach((box,i)=>{
+              box.style.setProperty('--delay', `${i*120}ms`); // 0, 120, 240ms …
+              box.classList.add('show');
+            });
+            ioB.unobserve(e.target); // 한 번만
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        groups.forEach(g=> ioB.observe(g));
+      })();
+
 
       /* D-DAY */
       const target = new Date("2025-12-13T14:00:00+09:00").getTime();
