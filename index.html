@@ -74,9 +74,10 @@
       --bride-nudge:.7px;
     }
     *{box-sizing:border-box}
-    html{font-size:16px}
-    @media (max-width: 759px) { html{ font-size:16px } }
-
+    html{ font-size: calc(16px + 5pt); }
+    @media (max-width: 759px) { 
+      html{ font-size: calc(16px + 5pt); }
+    }
     html,body{
       margin:0;padding:0;background:var(--bg);color:var(--ink);
       font-family:var(--font-fancy);-webkit-font-smoothing:antialiased;
