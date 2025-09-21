@@ -451,6 +451,43 @@
     #acc-groom .acc-item{ background:#ffffff; }   /* 필요 시 #f7fbff 등 아주 연하게 변경 가능 */
     #acc-bride .acc-item{ background:#ffffff; }   /* 필요 시 #fff6fa 등 아주 연하게 변경 가능 */
 
+    /* === INVITATION 이름 두 줄 정렬: 가운데 배치 + 좌우 끝 맞춤 === */
+    .inv-rows{
+      display: grid;
+      grid-template-columns: max-content max-content; /* 두 칼럼 너비를 각 행의 최대 내용에 맞춰 동일화 */
+      column-gap: 12px;
+      row-gap: 4px;
+      justify-content: center; /* 전체 블록을 가운데로 */
+      align-items: baseline;
+    }
+
+    /* 각 행의 p는 레이아웃 상 "투명" 처리해서, 내부 2개 아이템이 부모 그리드의 두 칼럼에 올라가게 함 */
+    .inv-row{ display: contents; }
+
+    /* 왼쪽 설명(부모님 소개) = 좌측 칼럼: 시작점(왼쪽) 정렬 → '시작'이 두 줄에서 동일 위치 */
+    .inv-rows .left-info{
+      justify-self: start;
+      text-align: left;
+      position: relative;
+      padding-left: 5px; /* 아이콘 공간 */
+    }
+
+    /* 오른쪽 이름(신랑/신부 이름) = 우측 칼럼: 끝점(오른쪽) 정렬 → '종료'가 두 줄에서 동일 위치 */
+    .inv-rows b{
+      justify-self: end;
+      white-space: nowrap;
+    }
+
+    /* 아이콘은 왼쪽으로 살짝 튀어나오게 */
+    .inv-rows .icon-chry{
+      position: absolute;
+      left: -14px;    /* 더 튀어나오게 하려면 -18~-22px 정도로 조절 */
+      top: 50%;
+      transform: translateY(-45%);
+      display: inline-flex;
+    }
+
+
   </style>
 </head>
 <body>
@@ -503,7 +540,7 @@
           <!-- 중심(500,460) 기준 회전 + 스큐 -->
           <g id="wgmBlock" transform="rotate(-14 500 460) skewX(-6)" data-cx="560">
             <!-- 1줄 -->
-            <g class="wgm-row" style="--row-delay:1.0s">
+            <g class="wgm-row" style="--row-delay:0.3s">
               <!-- 윤곽선 -->
               <text x="500" y="428" class="stroke wgm-line" data-row="1" style="font-weight:700; font-size:85px;">
                 <tspan class="glyph stroke" style="--i:0">w</tspan>
@@ -539,7 +576,7 @@
             </g>
 
             <!-- 2줄 -->
-            <g class="wgm-row" style="--row-delay:2.5s">
+            <g class="wgm-row" style="--row-delay:1.5s">
               <!-- 윤곽선 -->
               <text x="500" y="476" class="stroke wgm-line" data-row="2" style="font-weight:700; font-size:85px;">
                 <tspan class="glyph stroke" style="--i:0">m</tspan>
@@ -587,9 +624,15 @@
 가장 빛나는 날, 늘 곁에서 아껴준
 고마운 분들을 초대합니다.</p>
       <div class="divider"></div>
-      <div class="small">
-        <p><span class="muted">이제영, 윤혜정의 아들</span> <b>신랑 이상민</b></p>
-        <p class="name-line" data-track="-0.06em">
+      <div class="small inv-rows">
+        <!-- 1행: 신랑 -->
+        <p class="inv-row">
+          <span class="muted left-info">이제영, 윤혜정의 아들</span>
+          <b>신랑 이상민</b>
+        </p>
+
+        <!-- 2행: 신부 (아이콘은 왼쪽으로 살짝 튀어나와도 됨) -->
+        <p class="inv-row">
           <span class="muted left-info">
             <span class="icon-chry" aria-hidden="true">
               <!-- SVG 그대로 -->
@@ -619,8 +662,8 @@
           </span>
           <b class="bride">신부 이진희</b>
         </p>
-
       </div>
+
     </section>
 
     <!-- ACCOUNT NUMBER (새 디자인) -->
@@ -861,6 +904,13 @@
           </li>
         </ul>
 
+        <p class="row"><b>🅿️ 주차</b></p>
+        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
+          <li>
+            전문건설회관 지하주차장 이용 <br> (연회장에서 차량번호 등록 시 3시간 무료주차)
+          </li>
+        </ul>
+
 
         <p class="row"><b>🚇 지하철 이용시</b></p>
         <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
@@ -869,12 +919,7 @@
           <li>엘리베이터 탑승 후 3층 더에스비웨딩컨벤션 이동</li>
         </ul>
 
-        <p class="row"><b>🅿️ 주차</b></p>
-        <ul style="margin:6px 0 14px 0; padding-left:18px; line-height:1.5">
-          <li>
-            전문건설회관 지하주차장 이용 <br> (연회장에서 차량번호 등록 시 3시간 무료주차)
-          </li>
-        </ul>
+
       </div>
     </section>
 
