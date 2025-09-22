@@ -240,6 +240,14 @@
       .lightbox .prev{ left:8px } .lightbox .next{ right:8px }
       .lightbox .prev, .lightbox .next{ width:48px; height:48px; font-size:24px }
     }
+    .lightbox,
+    .lightbox .lb-inner {
+      touch-action: none;              /* 사파리 일부 버전 보완용 */
+      overscroll-behavior: contain;    /* 뷰포트 바운스 방지 */
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
 
     /* INTERVIEW */
     .interview{ padding:8px 8px; background:#fff7fa; border-radius:14px }
@@ -1536,6 +1544,35 @@
       });
     })();
   </script>
+
+  <script>
+    (function blockSafariSmartZoomOnlyWhenLightboxOpen(){
+      const lb = document.getElementById('lightbox');
+      if (!lb) return;
+
+      let lastTouchEnd = 0;
+      const onDoubleTap = (e) => {
+        if (!lb.classList.contains('open')) return;
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      };
+
+      const onGesture = (e) => {
+        if (!lb.classList.contains('open')) return;
+        e.preventDefault();
+      };
+
+      // passive:false 꼭 필요 (preventDefault 위해)
+      document.addEventListener('touchend', onDoubleTap, { passive: false });
+      document.addEventListener('gesturestart', onGesture, { passive: false });
+      document.addEventListener('gesturechange', onGesture, { passive: false });
+      document.addEventListener('gestureend', onGesture, { passive: false });
+    })();
+  </script>
+
 
 
 </body>
