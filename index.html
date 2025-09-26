@@ -637,6 +637,15 @@
       -webkit-user-drag:none; user-select:none;
     }
 
+    /* 터치에서는 브라우저가 가로 스크롤을 책임지게 */
+    .gallery{
+      touch-action: pan-x;        /* ← 수평 제스처는 네이티브로 */
+    }
+
+    /* 스냅 안정성 ↑ : 지나칠 때 반드시 스냅 지점에서 멈춤 */
+    .gallery picture{
+      scroll-snap-stop: always;
+    }
 
 
   </style>
@@ -1984,96 +1993,98 @@
       // 초기 정렬(보장)
       fitHeroTwoLines();
 
-      /* 갤러리: 마우스 드래그/터치 스와이프 스크롤 + 드래그 중 클릭 방지 */
       (function enableGalleryDragScroll(){
         const gal = document.getElementById('gallery');
         if (!gal) return;
 
+        // 터치(손가락/펜)는 네이티브 스크롤만 사용하도록 함
+        // 마우스만 드래그-스크롤 구현
         let isDown = false, startX = 0, scrollX = 0, moved = false;
 
-        // rAF 배치용
-        let pending = false, targetScrollLeft = 0;
-
-        function applyScrollLeft(){
-          pending = false;
-          gal.scrollLeft = targetScrollLeft;
-        }
-
-        // 파티클 디바운스/상태 기반 제어
-        let pausedParticles = false;
-        let resumeTimer = null;
-        const PAUSE_RESUME_DELAY = 200;
-
-        function ensureParticlesPaused(){
-          if (window.__bokeh && !pausedParticles){
-            window.__bokeh.stop();
-            pausedParticles = true;
-          }
+        // 파티클 일시정지(있다면)
+        let pausedParticles = false, resumeTimer = null;
+        const PAUSE_DELAY = 200;
+        function pauseParticles(){
+          if (window.__bokeh && !pausedParticles){ window.__bokeh.stop(); pausedParticles = true; }
           clearTimeout(resumeTimer);
           resumeTimer = setTimeout(()=>{
-            if (window.__bokeh && pausedParticles){
-              window.__bokeh.start();
-              pausedParticles = false;
-            }
-          }, PAUSE_RESUME_DELAY);
+            if (window.__bokeh && pausedParticles){ window.__bokeh.start(); pausedParticles = false; }
+          }, PAUSE_DELAY);
         }
 
-        const down = (x)=>{
+        // rAF로 스크롤 업데이트(프레임당 1회)
+        let pending = false, targetScrollLeft = 0;
+        function flush(){ pending = false; gal.scrollLeft = targetScrollLeft; }
+
+        gal.addEventListener('pointerdown', (e)=>{
+          if (e.pointerType !== 'mouse') return;     // ← 마우스만!
           isDown = true; moved = false;
-          startX = x; scrollX = gal.scrollLeft;
+          startX = e.clientX; scrollX = gal.scrollLeft;
+          gal.setPointerCapture(e.pointerId);
           gal.classList.add('is-dragging');
-          ensureParticlesPaused();
-        };
+          pauseParticles();
+          e.preventDefault();
+        });
 
-        const move = (x)=>{
-          if (!isDown) return;
-          const dx = x - startX;
+        gal.addEventListener('pointermove', (e)=>{
+          if (!isDown || e.pointerType !== 'mouse') return;
+          const dx = e.clientX - startX;
           if (Math.abs(dx) > 3) moved = true;
-
           targetScrollLeft = scrollX - dx;
-          if (!pending){
-            pending = true;
-            requestAnimationFrame(applyScrollLeft);
-          }
-          ensureParticlesPaused();
-        };
+          if (!pending){ pending = true; requestAnimationFrame(flush); }
+          pauseParticles();
+        });
 
-        const up = ()=>{
+        function settleToNearest(){
+          // 가장 중앙에 가까운 picture로 보정(마우스에서만)
+          const pics = Array.from(gal.querySelectorAll('picture'));
+          if (!pics.length) return;
+          const center = gal.scrollLeft + gal.clientWidth/2;
+
+          let best = 0, bestDist = Infinity;
+          for (let i=0;i<pics.length;i++){
+            const r = pics[i].getBoundingClientRect(); // 뷰포트 기준
+            const left = pics[i].offsetLeft;           // 스크롤 컨테이너 기준
+            const w = r.width;
+            const mid = left + w/2;
+            const d = Math.abs(mid - center);
+            if (d < bestDist){ bestDist = d; best = i; }
+          }
+          const el = pics[best];
+          const target = el.offsetLeft - (gal.clientWidth - el.clientWidth)/2;
+          gal.scrollTo({ left: target, behavior: 'smooth' });
+        }
+
+        function endDrag(e){
+          if (e && e.pointerType !== 'mouse') return;
           isDown = false;
           gal.classList.remove('is-dragging');
-          ensureParticlesPaused();
-        };
+          pauseParticles();
+          // 마우스 드래그를 조금만 했어도, 가장 가까운 카드로 정렬
+          if (moved) settleToNearest();
+        }
 
-        // 마우스
-        gal.addEventListener('mousedown', (e)=>{ down(e.clientX); });
-        gal.addEventListener('mousemove', (e)=>{ move(e.clientX); });
-        gal.addEventListener('mouseleave', up);
-        gal.addEventListener('mouseup', up);
+        gal.addEventListener('pointerup', endDrag);
+        gal.addEventListener('pointercancel', endDrag);
+        gal.addEventListener('pointerleave', endDrag);
 
-        // 터치
-        gal.addEventListener('touchstart', (e)=>{ down(e.touches[0].clientX); }, {passive:true});
-        gal.addEventListener('touchmove', (e)=>{ move(e.touches[0].clientX); }, {passive:true});
-        gal.addEventListener('touchend', up);
-
-        // 휠 → 가로 스크롤 전환
+        // 휠(세로→가로 전환)은 유지
         gal.addEventListener('wheel', (e)=>{
           if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
             targetScrollLeft = gal.scrollLeft + e.deltaY;
-            if (!pending){
-              pending = true;
-              requestAnimationFrame(applyScrollLeft);
-            }
+            if (!pending){ pending = true; requestAnimationFrame(flush); }
             e.preventDefault();
-            ensureParticlesPaused();
+            pauseParticles();
           }
         }, { passive:false });
 
-        // 드래그 직후 클릭 무시(기존)
+        // 드래그 직후 클릭 무시(라이트박스 오작동 방지)
         gal.addEventListener('click', (e)=>{
           if (!moved) return;
           e.preventDefault(); e.stopPropagation();
         }, true);
       })();
+
 
 
 
