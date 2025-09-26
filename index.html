@@ -578,7 +578,43 @@
       stroke-dashoffset: 0 !important;
     }
 
+    /* === GALLERY: 가로 스크롤 (한 장 꽉 차게) === */
+    .gallery-wrap{ position:relative; }
 
+    .gallery{
+      display:flex;
+      gap:0;               /* ← 간격 제거 */
+      padding:0;           /* ← 안쪽 여백 제거 */
+      overflow-x:auto;
+      overflow-y:hidden;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+    .gallery::-webkit-scrollbar{ display:none; }
+    .gallery{ scrollbar-width: none; }
+
+    .gallery picture{
+      flex: 0 0 100%;      /* ← 항상 1장 */
+      max-width: 100%;
+      scroll-snap-align: center; /* or start */
+      display:block;
+      aspect-ratio: 3 / 4;
+    }
+
+    /* 더 이상 브레이크포인트에서 줄이지 않기 */
+    @media (min-width:560px){
+      .gallery picture{ flex-basis:100%; max-width:100%; }
+    }
+    @media (min-width:760px){
+      .gallery picture{ flex-basis:100%; max-width:100%; }
+    }
+
+    .gallery picture > img{
+      width:100%; height:100%;
+      object-fit:cover; display:block;
+      border-radius:10px; cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -844,67 +880,488 @@
     <section>
       <h2 class="section-title">GALLERY</h2>
       <p class="small muted center">사진을 클릭하면 크게 볼 수 있어요.<br>좌우 화살표로 넘길 수 있어요.</p>
-      <div class="gallery card" id="gallery">
-        <picture>
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery2-1024.avif 1024w,
-            https://smjhwedding.github.io/gallery2-768.avif 768w,
-            https://smjhwedding.github.io/gallery2-512.avif 512w
-          " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery2-1024.webp 1024w,
-            https://smjhwedding.github.io/gallery2-768.webp 768w,
-            https://smjhwedding.github.io/gallery2-512.webp 512w
-          " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-          <img class="no-save"
-               src="./KakaoTalk_20250908_010410211.jpg"
-               data-full="./KakaoTalk_20250908_010410211.jpg"
-               alt="gallery2"
-               width="1024" height="1365"
-               loading="lazy" decoding="async"
-               draggable="false" oncontextmenu="return false" onmousedown="return false">
-        </picture>
+      <div class="gallery-wrap card">
+        <div class="gallery" id="gallery" tabindex="0" aria-label="신랑신부 갤러리 (가로 스크롤)">        
+          <picture>
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery2-1024.avif 1024w,
+              https://smjhwedding.github.io/gallery2-768.avif 768w,
+              https://smjhwedding.github.io/gallery2-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery2-1024.webp 1024w,
+              https://smjhwedding.github.io/gallery2-768.webp 768w,
+              https://smjhwedding.github.io/gallery2-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250908_010410211.jpg"
+                data-full="./KakaoTalk_20250908_010410211.jpg"
+                alt="gallery2"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
 
-        <picture>
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery3-1024.avif 1024w,
-            https://smjhwedding.github.io/gallery3-768.avif 768w,
-            https://smjhwedding.github.io/gallery3-512.avif 512w
-          " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery3-1024.webp 1024w,
-            https://smjhwedding.github.io/gallery3-768.webp 768w,
-            https://smjhwedding.github.io/gallery3-512.webp 512w
-          " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-          <img class="no-save"
-              src="./genga1.jpg"
-              data-full="./genga1.jpg"
-              alt="gallery3"
-              width="1024" height="1365"
-              loading="lazy" decoding="async"
-              draggable="false" oncontextmenu="return false" onmousedown="return false">
-        </picture>
+          <picture>
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery3-1024.avif 1024w,
+              https://smjhwedding.github.io/gallery3-768.avif 768w,
+              https://smjhwedding.github.io/gallery3-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery3-1024.webp 1024w,
+              https://smjhwedding.github.io/gallery3-768.webp 768w,
+              https://smjhwedding.github.io/gallery3-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./genga1.jpg"
+                data-full="./genga1.jpg"
+                alt="gallery3"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
 
-        <picture>
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery4-1024.avif 1024w,
-            https://smjhwedding.github.io/gallery4-768.avif 768w,
-            https://smjhwedding.github.io/gallery4-512.avif 512w
-          " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-          <source data-srcset="
-            https://smjhwedding.github.io/gallery4-1024.webp 1024w,
-            https://smjhwedding.github.io/gallery4-768.webp 768w,
-            https://smjhwedding.github.io/gallery4-512.webp 512w
-          " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-          <img class="no-save"
-              src="./4cut.jpg"
-              data-full="./4cut.jpg"
-              alt="gallery4"
-              width="1024" height="1365"
-              loading="lazy" decoding="async"
-              draggable="false" oncontextmenu="return false" onmousedown="return false">
-        </picture>
+          <picture>
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery4-1024.avif 1024w,
+              https://smjhwedding.github.io/gallery4-768.avif 768w,
+              https://smjhwedding.github.io/gallery4-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              https://smjhwedding.github.io/gallery4-1024.webp 1024w,
+              https://smjhwedding.github.io/gallery4-768.webp 768w,
+              https://smjhwedding.github.io/gallery4-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./4cut.jpg"
+                data-full="./4cut.jpg"
+                alt="gallery4"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
 
+            <!-- 0926 base -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567-768.avif 768w,
+              ./KakaoTalk_20250926_103401567-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567-768.webp 768w,
+              ./KakaoTalk_20250926_103401567-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567.jpg"
+                data-full="./KakaoTalk_20250926_103401567.jpg"
+                alt="0926-00"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _01 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_01-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_01-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_01-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_01-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_01-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_01-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_01.jpg"
+                data-full="./KakaoTalk_20250926_103401567_01.jpg"
+                alt="0926-01"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _02 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_02-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_02-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_02-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_02-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_02-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_02-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_02.jpg"
+                data-full="./KakaoTalk_20250926_103401567_02.jpg"
+                alt="0926-02"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _03 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_03-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_03-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_03-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_03-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_03-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_03-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_03.jpg"
+                data-full="./KakaoTalk_20250926_103401567_03.jpg"
+                alt="0926-03"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _04 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_04-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_04-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_04-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_04-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_04-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_04-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_04.jpg"
+                data-full="./KakaoTalk_20250926_103401567_04.jpg"
+                alt="0926-04"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _05 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_05-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_05-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_05-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_05-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_05-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_05-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_05.jpg"
+                data-full="./KakaoTalk_20250926_103401567_05.jpg"
+                alt="0926-05"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _06 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_06-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_06-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_06-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_06-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_06-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_06-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_06.jpg"
+                data-full="./KakaoTalk_20250926_103401567_06.jpg"
+                alt="0926-06"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _07 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_07-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_07-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_07-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_07-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_07-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_07-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_07.jpg"
+                data-full="./KakaoTalk_20250926_103401567_07.jpg"
+                alt="0926-07"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _08 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_08-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_08-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_08-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_08-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_08-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_08-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_08.jpg"
+                data-full="./KakaoTalk_20250926_103401567_08.jpg"
+                alt="0926-08"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _09 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_09-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_09-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_09-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_09-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_09-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_09-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_09.jpg"
+                data-full="./KakaoTalk_20250926_103401567_09.jpg"
+                alt="0926-09"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _10 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_10-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_10-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_10-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_10-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_10-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_10-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_10.jpg"
+                data-full="./KakaoTalk_20250926_103401567_10.jpg"
+                alt="0926-10"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _11 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_11-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_11-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_11-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_11-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_11-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_11-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_11.jpg"
+                data-full="./KakaoTalk_20250926_103401567_11.jpg"
+                alt="0926-11"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _12 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_12-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_12-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_12-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_12-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_12-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_12-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_12.jpg"
+                data-full="./KakaoTalk_20250926_103401567_12.jpg"
+                alt="0926-12"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _13 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_13-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_13-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_13-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_13-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_13-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_13-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_13.jpg"
+                data-full="./KakaoTalk_20250926_103401567_13.jpg"
+                alt="0926-13"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _14 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_14-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_14-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_14-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_14-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_14-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_14-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_14.jpg"
+                data-full="./KakaoTalk_20250926_103401567_14.jpg"
+                alt="0926-14"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _15 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_15-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_15-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_15-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_15-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_15-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_15-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_15.jpg"
+                data-full="./KakaoTalk_20250926_103401567_15.jpg"
+                alt="0926-15"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _16 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_16-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_16-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_16-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_16-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_16-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_16-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_16.jpg"
+                data-full="./KakaoTalk_20250926_103401567_16.jpg"
+                alt="0926-16"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _17 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_17-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_17-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_17-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_17-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_17-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_17-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_17.jpg"
+                data-full="./KakaoTalk_20250926_103401567_17.jpg"
+                alt="0926-17"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _18 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_18-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_18-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_18-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_18-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_18-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_18-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_18.jpg"
+                data-full="./KakaoTalk_20250926_103401567_18.jpg"
+                alt="0926-18"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _19 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_19-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_19-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_19-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_19-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_19-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_19-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_19.jpg"
+                data-full="./KakaoTalk_20250926_103401567_19.jpg"
+                alt="0926-19"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+        </div>
       </div>
 
       <div class="lightbox" id="lightbox" aria-modal="true" role="dialog">
@@ -1505,6 +1962,57 @@
 
       // 초기 정렬(보장)
       fitHeroTwoLines();
+
+      /* 갤러리: 마우스 드래그/터치 스와이프 스크롤 + 드래그 중 클릭 방지 */
+      (function enableGalleryDragScroll(){
+        const gal = document.getElementById('gallery');
+        if (!gal) return;
+
+        let isDown = false, startX = 0, scrollX = 0, moved = false;
+
+        const down = (x)=>{
+          isDown = true; moved = false;
+          startX = x; scrollX = gal.scrollLeft;
+          gal.classList.add('is-dragging');
+        };
+        const move = (x)=>{
+          if (!isDown) return;
+          const dx = x - startX;
+          if (Math.abs(dx) > 3) moved = true;
+          gal.scrollLeft = scrollX - dx;
+        };
+        const up = ()=>{
+          isDown = false;
+          gal.classList.remove('is-dragging');
+        };
+
+        // 마우스
+        gal.addEventListener('mousedown', (e)=>{ down(e.clientX); });
+        gal.addEventListener('mousemove', (e)=>{ move(e.clientX); });
+        gal.addEventListener('mouseleave', up);
+        gal.addEventListener('mouseup', up);
+
+        // 터치
+        gal.addEventListener('touchstart', (e)=>{ down(e.touches[0].clientX); }, {passive:true});
+        gal.addEventListener('touchmove', (e)=>{ move(e.touches[0].clientX); }, {passive:true});
+        gal.addEventListener('touchend', up);
+
+        // 드래그로 스크롤한 직후에는 썸네일 클릭을 무시(라이트박스 오작동 방지)
+        gal.addEventListener('click', (e)=>{
+          if (!moved) return; // 순수 클릭은 허용
+          // moved 상태면 이번 클릭만 막음
+          e.preventDefault(); e.stopPropagation();
+        }, true);
+
+        // 휠로 가로 스크롤 (트랙패드/마우스 휠)
+        gal.addEventListener('wheel', (e)=>{
+          if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+            gal.scrollLeft += e.deltaY; // 세로 휠을 가로 스크롤로
+            e.preventDefault();
+          }
+        }, { passive:false });
+      })();
+
     });
 
     // data-track 값을 --track 커스텀 변수로 반영
