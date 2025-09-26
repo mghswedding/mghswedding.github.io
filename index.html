@@ -1990,31 +1990,58 @@
         if (!gal) return;
 
         let isDown = false, startX = 0, scrollX = 0, moved = false;
-        let pauseTimer = null;
 
-        const pauseParticles = ()=>{
-          if (window.__bokeh) window.__bokeh.stop();
-          clearTimeout(pauseTimer);
-          pauseTimer = setTimeout(()=>{ if (window.__bokeh) window.__bokeh.start(); }, 200); // 손 뗀 뒤 200ms 후 재개
-        };
+        // rAF 배치용
+        let pending = false, targetScrollLeft = 0;
+
+        function applyScrollLeft(){
+          pending = false;
+          gal.scrollLeft = targetScrollLeft;
+        }
+
+        // 파티클 디바운스/상태 기반 제어
+        let pausedParticles = false;
+        let resumeTimer = null;
+        const PAUSE_RESUME_DELAY = 200;
+
+        function ensureParticlesPaused(){
+          if (window.__bokeh && !pausedParticles){
+            window.__bokeh.stop();
+            pausedParticles = true;
+          }
+          clearTimeout(resumeTimer);
+          resumeTimer = setTimeout(()=>{
+            if (window.__bokeh && pausedParticles){
+              window.__bokeh.start();
+              pausedParticles = false;
+            }
+          }, PAUSE_RESUME_DELAY);
+        }
 
         const down = (x)=>{
           isDown = true; moved = false;
           startX = x; scrollX = gal.scrollLeft;
           gal.classList.add('is-dragging');
-          pauseParticles();
+          ensureParticlesPaused();
         };
+
         const move = (x)=>{
           if (!isDown) return;
           const dx = x - startX;
           if (Math.abs(dx) > 3) moved = true;
-          gal.scrollLeft = scrollX - dx;
-          pauseParticles();
+
+          targetScrollLeft = scrollX - dx;
+          if (!pending){
+            pending = true;
+            requestAnimationFrame(applyScrollLeft);
+          }
+          ensureParticlesPaused();
         };
+
         const up = ()=>{
           isDown = false;
           gal.classList.remove('is-dragging');
-          pauseParticles();
+          ensureParticlesPaused();
         };
 
         // 마우스
@@ -2028,21 +2055,26 @@
         gal.addEventListener('touchmove', (e)=>{ move(e.touches[0].clientX); }, {passive:true});
         gal.addEventListener('touchend', up);
 
-        // 휠 → 가로 스크롤 전환 중에도 일시 정지
+        // 휠 → 가로 스크롤 전환
         gal.addEventListener('wheel', (e)=>{
           if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-            gal.scrollLeft += e.deltaY;
+            targetScrollLeft = gal.scrollLeft + e.deltaY;
+            if (!pending){
+              pending = true;
+              requestAnimationFrame(applyScrollLeft);
+            }
             e.preventDefault();
-            pauseParticles();
+            ensureParticlesPaused();
           }
         }, { passive:false });
 
-        // 드래그 직후 클릭 무시(기존 그대로)
+        // 드래그 직후 클릭 무시(기존)
         gal.addEventListener('click', (e)=>{
           if (!moved) return;
           e.preventDefault(); e.stopPropagation();
         }, true);
       })();
+
 
 
       (function warmupGalleryImages(){
