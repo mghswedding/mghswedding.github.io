@@ -1859,9 +1859,9 @@
         const ctx = cvs.getContext('2d');
         layer.appendChild(cvs);
 
-        let w, h, dpr;
+        let w, h, dpr, rafId=null, paused=false;
+
         function resize(){
-          // 성능/배터리 보호: DPR 상한 2
           dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
           w = layer.clientWidth; h = layer.clientHeight;
           cvs.width = Math.floor(w * dpr); 
@@ -1872,38 +1872,30 @@
         resize(); 
         window.addEventListener('resize', resize);
 
-        // 파스텔 톤(사진 위에 은은)
-        const colors = [
-          [255,236,214], [255,213,163], [253,222,229], [246,189,197], [255,244,224]
-        ];
-
+        const colors = [[255,236,214],[255,213,163],[253,222,229],[246,189,197],[255,244,224]];
         const particles = [];
-        const COUNT = 42;            // ← 양(많을수록 풍성, 성능은 감소)
+        const BASE_COUNT = 42;
+        const COUNT = (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 20 : BASE_COUNT);
+
         function rnd(a,b){ return a + Math.random()*(b-a); }
         function pick(a){ return a[(Math.random()*a.length)|0]; }
 
-        // y0 전달 시 그 위치에서 스폰(리사이즈/재생성용)
         function spawn(y0){
           const r = rnd(6, 20), c = pick(colors);
           return { 
             x: rnd(-w*0.1, w*1.1), 
-            y: y0 ?? rnd(h*0.55, h*1.12),   // 하단~중하단에서 천천히 올라오게
-            r, 
-            vy: rnd(-0.22, -0.08),          // 위로 이동
-            drift: rnd(-0.12, 0.12),        // 좌우 미세 흔들림
-            a: rnd(0.35, 0.85),             // 기본 투명도
-            rgb: c, 
-            tw: rnd(2, 4),                  // 반짝 주기
-            t0: Math.random()*6.28
+            y: y0 ?? rnd(h*0.55, h*1.12),
+            r, vy: rnd(-0.22, -0.08), drift: rnd(-0.12, 0.12),
+            a: rnd(0.35, 0.85), rgb: c, tw: rnd(2, 4), t0: Math.random()*6.28
           };
         }
         for(let i=0;i<COUNT;i++) particles.push(spawn());
 
-        // 스크롤 패럴럭스(살짝 위로 당겨지는 느낌)
         let scrollY = window.scrollY||0;
-        window.addEventListener('scroll', ()=>{ scrollY = window.scrollY||0; });
+        window.addEventListener('scroll', ()=>{ scrollY = window.scrollY||0; }, {passive:true});
 
-        function draw(){
+        function frame(){
+          if (paused) return;
           ctx.clearRect(0,0,cvs.width,cvs.height);
           const parallax = scrollY * 0.02;
 
@@ -1911,15 +1903,11 @@
             const p = particles[i];
             p.x += p.drift; 
             p.y += p.vy;
-
-            // 화면 위로 사라지면 아래에서 재스폰
             if(p.y < -40){ particles[i] = spawn(h + rnd(10,120)); continue; }
 
-            // 반짝임
             const tw = 0.5 + 0.5*Math.sin((performance.now()/1000)/p.tw + p.t0);
             const alpha = Math.max(0, Math.min(1, p.a*(0.65+0.35*tw)));
             const [r,g,b] = p.rgb, R = p.r;
-
             const x = p.x * dpr, y = (p.y - parallax) * dpr;
 
             const grad = ctx.createRadialGradient(x,y,R*0.2*dpr, x,y,R*dpr);
@@ -1933,10 +1921,19 @@
             ctx.arc(x, y, R*dpr, 0, Math.PI*2); 
             ctx.fill();
           }
-          requestAnimationFrame(draw);
+          rafId = requestAnimationFrame(frame);
         }
-        requestAnimationFrame(draw);
+
+        function start(){ if (paused){ paused=false; rafId=requestAnimationFrame(frame);} }
+        function stop(){ paused=true; if (rafId){ cancelAnimationFrame(rafId); rafId=null; } }
+
+        // 노출
+        window.__bokeh = { start, stop };
+
+        // 시작
+        rafId = requestAnimationFrame(frame);
       })();
+
 
       /* 글씨 쓰는 동안만 mask/clip 꺼서 깜빡임 제거 (필기 애니메이션은 유지) */
       (function squashWhiteFlicker(){
@@ -1993,21 +1990,31 @@
         if (!gal) return;
 
         let isDown = false, startX = 0, scrollX = 0, moved = false;
+        let pauseTimer = null;
+
+        const pauseParticles = ()=>{
+          if (window.__bokeh) window.__bokeh.stop();
+          clearTimeout(pauseTimer);
+          pauseTimer = setTimeout(()=>{ if (window.__bokeh) window.__bokeh.start(); }, 200); // 손 뗀 뒤 200ms 후 재개
+        };
 
         const down = (x)=>{
           isDown = true; moved = false;
           startX = x; scrollX = gal.scrollLeft;
           gal.classList.add('is-dragging');
+          pauseParticles();
         };
         const move = (x)=>{
           if (!isDown) return;
           const dx = x - startX;
           if (Math.abs(dx) > 3) moved = true;
           gal.scrollLeft = scrollX - dx;
+          pauseParticles();
         };
         const up = ()=>{
           isDown = false;
           gal.classList.remove('is-dragging');
+          pauseParticles();
         };
 
         // 마우스
@@ -2021,20 +2028,58 @@
         gal.addEventListener('touchmove', (e)=>{ move(e.touches[0].clientX); }, {passive:true});
         gal.addEventListener('touchend', up);
 
-        // 드래그로 스크롤한 직후에는 썸네일 클릭을 무시(라이트박스 오작동 방지)
-        gal.addEventListener('click', (e)=>{
-          if (!moved) return; // 순수 클릭은 허용
-          // moved 상태면 이번 클릭만 막음
-          e.preventDefault(); e.stopPropagation();
-        }, true);
-
-        // 휠로 가로 스크롤 (트랙패드/마우스 휠)
+        // 휠 → 가로 스크롤 전환 중에도 일시 정지
         gal.addEventListener('wheel', (e)=>{
           if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-            gal.scrollLeft += e.deltaY; // 세로 휠을 가로 스크롤로
+            gal.scrollLeft += e.deltaY;
             e.preventDefault();
+            pauseParticles();
           }
         }, { passive:false });
+
+        // 드래그 직후 클릭 무시(기존 그대로)
+        gal.addEventListener('click', (e)=>{
+          if (!moved) return;
+          e.preventDefault(); e.stopPropagation();
+        }, true);
+      })();
+
+
+      (function warmupGalleryImages(){
+        const gal = document.getElementById('gallery');
+        if (!gal) return;
+
+        const imgs = [...gal.querySelectorAll('picture > img')];
+
+        // 교차영역을 넉넉히 잡아 '바로 다음/이전' 이미지도 미리 디코딩
+        const io = new IntersectionObserver(async (ents)=>{
+          for (const e of ents){
+            if (!e.isIntersecting) continue;
+            const img = e.target;
+
+            // 현재 보이는 이미지는 fetch priority를 높여서 즉시 받도록
+            try { img.fetchPriority = 'high'; } catch(_) {}
+
+            // 디코딩(이미 받아놨다면 바로 resolve) → 스크롤 중 해제 비용 제거
+            try { await img.decode(); } catch(_) {}
+
+            // 근처 이웃도 미리 디코딩(±1, ±2 정도)
+            const i = imgs.indexOf(img);
+            const neigh = [i-2, i-1, i+1, i+2].filter(j=> j>=0 && j<imgs.length);
+            for (const j of neigh){
+              const nimg = imgs[j];
+              try { nimg.fetchPriority = 'auto'; } catch(_) {}
+              // 소스가 아직 data-srcset에서 옮겨지지 않았을 수도 있으니 currentSrc/fallback 보장
+              if (!nimg.complete) { try { await nimg.decode(); } catch(_) {} }
+            }
+          }
+        }, {
+          root: gal,
+          rootMargin: '50% 40%',   // 가로 스크롤 특성상 좌우를 넓게 관찰
+          threshold: 0.01
+        });
+
+        imgs.forEach(img => io.observe(img));
       })();
 
     });
