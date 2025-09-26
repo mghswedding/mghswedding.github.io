@@ -578,14 +578,14 @@
       stroke-dashoffset: 0 !important;
     }
 
-   /* === GALLERY: 가로 스크롤 (썸네일 세로도 줄여서 또렷하게) === */
+    /* === GALLERY: 가로 스크롤 (picture 자체 크기 축소) === */
     .gallery-wrap{ position:relative; }
 
     .gallery{
       display:flex;
-      align-items:center;          /* 높이 줄였을 때 수직 정렬 */
-      gap:12px;                    /* 썸네일 사이 여백 */
-      padding:0 10px;              /* 좌우 여백 */
+      align-items:center;
+      gap:12px;
+      padding:0 10px;
       overflow-x:auto;
       overflow-y:hidden;
       scroll-snap-type:x mandatory;
@@ -595,41 +595,39 @@
     .gallery::-webkit-scrollbar{ display:none; }
     .gallery{ scrollbar-width: none; }
 
-    /* 핵심: 높이(height)로 크기 제어 + aspect-ratio로 너비 자동 계산 */
-    :root{
-      --gal-h: 64vh;               /* 기본 썸네일 높이 (세로) */
-      --gal-h-max: 520px;          /* 너무 커지지 않게 상한 */
-    }
-
+    /* picture 자체 크기 ↓ */
     .gallery picture{
-      height: min(var(--gal-h), var(--gal-h-max));
-      aspect-ratio: 3 / 4;         /* 3:4 비율 유지 → width 자동 결정 */
-      width: auto;                 /* height + aspect-ratio로 계산 */
-      flex: 0 0 auto;              /* 가로 스크롤용 고정 폭 아이템 */
-      max-width: calc(100vw - 32px); /* 혹시라도 뷰포트 넘치지 않도록 안전장치 */
+      flex: 0 0 auto;
+      width: 70vw;                /* ✅ 화면 폭의 70%만 사용 */
+      max-width: 280px;           /* ✅ 절대 상한 */
+      aspect-ratio: 3 / 4;        /* 세로 비율 유지 */
+      height: auto;
       scroll-snap-align: center;
       display:block;
     }
 
-    /* 작은 화면: 더 작게(화질 보정 효과 극대화) */
+    /* 작은 화면 */
     @media (max-width: 559px){
-      :root{ --gal-h: 60vh; --gal-h-max: 480px; }
-      .gallery{ gap:10px; padding:0 8px; }
+      .gallery picture{
+        width: 72vw;
+        max-width: 240px;
+      }
     }
 
     /* 태블릿 */
     @media (min-width: 560px) and (max-width: 759px){
-      :root{ --gal-h: 56vh; --gal-h-max: 520px; }
+      .gallery picture{
+        width: 60vw;
+        max-width: 300px;
+      }
     }
 
-    /* 데스크톱: 세로 과도 확대 방지 */
+    /* 데스크탑 */
     @media (min-width: 760px){
-      :root{ --gal-h: 50vh; --gal-h-max: 520px; }
-    }
-
-    /* 아주 큰 화면: 더 눌러서 보이기 */
-    @media (min-width: 1024px){
-      :root{ --gal-h: 46vh; --gal-h-max: 500px; }
+      .gallery picture{
+        width: 50vw;
+        max-width: 320px;
+      }
     }
 
     .gallery picture > img{
@@ -638,6 +636,8 @@
       border-radius:10px; cursor:pointer;
       -webkit-user-drag:none; user-select:none;
     }
+
+
 
   </style>
 </head>
