@@ -231,16 +231,35 @@
     .lightbox.open{display:flex}
     .lightbox .lb-inner{position:relative;max-width:92vw;max-height:86vh;display:flex;align-items:center;justify-content:center}
     .lightbox img{max-width:92vw;max-height:86vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.5);object-fit:contain;touch-action:none;}
-    .lightbox .prev, .lightbox .next{
-      position:absolute; top:50%; transform:translateY(-50%);
-      width:44px;height:44px;border-radius:999px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);
-      display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;cursor:pointer;user-select:none;backdrop-filter:blur(4px)
+    .lightbox .prev,
+    .lightbox .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 42px;        /* 화살표 크기 키우기 */
+      color: #fff;            /* 글자색만 표시 */
+      cursor: pointer;
+      user-select: none;
+      background: none;       /* 🔥 배경 제거 */
+      border: none;           /* 🔥 테두리 제거 */
+      box-shadow: none;       /* 🔥 그림자 제거 */
+      width: auto;
+      height: auto;
+      padding: 0;
     }
-    .lightbox .prev{ left:-54px } .lightbox .next{ right:-54px }
-    @media (max-width: 560px){
-      .lightbox .prev{ left:8px } .lightbox .next{ right:8px }
-      .lightbox .prev, .lightbox .next{ width:48px; height:48px; font-size:24px }
+
+    /* 위치만 조절 */
+    .lightbox .prev { left: 16px; }
+    .lightbox .next { right: 16px; }
+
+    /* 작은 화면에서도 동일하게 */
+    @media (max-width: 560px) {
+      .lightbox .prev { left: 10px; }
+      .lightbox .next { right: 10px; }
+      .lightbox .prev,
+      .lightbox .next { font-size: 36px; }
     }
+
     .lightbox,
     .lightbox .lb-inner {
       touch-action: none;              /* 사파리 일부 버전 보완용 */
