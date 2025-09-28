@@ -647,6 +647,19 @@
       scroll-snap-stop: always;
     }
 
+    /* 라이트박스 페이지 표시 */
+    .lb-pager{
+      position:absolute;
+      left:50%; bottom:10px; transform:translateX(-50%);
+      padding:6px 10px; border-radius:999px;
+      background:rgba(0,0,0,.55); color:#fff;
+      font-family:var(--font-sans); font-weight:800; font-size:.82rem;
+      line-height:1; letter-spacing:.02em;
+      backdrop-filter:blur(6px);
+      border:1px solid rgba(255,255,255,.35);
+      user-select:none;
+    }
+    @media (min-width:760px){ .lb-pager{ display:none; } } /* 모바일만 표시 */
 
   </style>
 </head>
@@ -934,47 +947,6 @@
                 loading="lazy" decoding="async"
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
           </picture>
-
-          <picture>
-            <source data-srcset="
-              https://smjhwedding.github.io/gallery3-1024.avif 1024w,
-              https://smjhwedding.github.io/gallery3-768.avif 768w,
-              https://smjhwedding.github.io/gallery3-512.avif 512w
-            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-            <source data-srcset="
-              https://smjhwedding.github.io/gallery3-1024.webp 1024w,
-              https://smjhwedding.github.io/gallery3-768.webp 768w,
-              https://smjhwedding.github.io/gallery3-512.webp 512w
-            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-            <img class="no-save"
-                src="./genga1.jpg"
-                data-full="./genga1.jpg"
-                alt="gallery3"
-                width="1024" height="1365"
-                loading="lazy" decoding="async"
-                draggable="false" oncontextmenu="return false" onmousedown="return false">
-          </picture>
-
-          <picture>
-            <source data-srcset="
-              https://smjhwedding.github.io/gallery4-1024.avif 1024w,
-              https://smjhwedding.github.io/gallery4-768.avif 768w,
-              https://smjhwedding.github.io/gallery4-512.avif 512w
-            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-            <source data-srcset="
-              https://smjhwedding.github.io/gallery4-1024.webp 1024w,
-              https://smjhwedding.github.io/gallery4-768.webp 768w,
-              https://smjhwedding.github.io/gallery4-512.webp 512w
-            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-            <img class="no-save"
-                src="./4cut.jpg"
-                data-full="./4cut.jpg"
-                alt="gallery4"
-                width="1024" height="1365"
-                loading="lazy" decoding="async"
-                draggable="false" oncontextmenu="return false" onmousedown="return false">
-          </picture>
-
             <!-- 0926 base -->
           <picture>
             <source data-srcset="
@@ -991,6 +963,26 @@
                 src="./KakaoTalk_20250926_103401567.jpg"
                 data-full="./KakaoTalk_20250926_103401567.jpg"
                 alt="0926-00"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+                    <!-- 0926 _03 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_03-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_03-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_03-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_03-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_03-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_03-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_03.jpg"
+                data-full="./KakaoTalk_20250926_103401567_03.jpg"
+                alt="0926-03"
                 width="1024" height="1365"
                 loading="lazy" decoding="async"
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
@@ -1033,27 +1025,6 @@
                 src="./KakaoTalk_20250926_103401567_02.jpg"
                 data-full="./KakaoTalk_20250926_103401567_02.jpg"
                 alt="0926-02"
-                width="1024" height="1365"
-                loading="lazy" decoding="async"
-                draggable="false" oncontextmenu="return false" onmousedown="return false">
-          </picture>
-
-          <!-- 0926 _03 -->
-          <picture>
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_03-1024.avif 1024w,
-              ./KakaoTalk_20250926_103401567_03-768.avif 768w,
-              ./KakaoTalk_20250926_103401567_03-512.avif 512w
-            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_03-1024.webp 1024w,
-              ./KakaoTalk_20250926_103401567_03-768.webp 768w,
-              ./KakaoTalk_20250926_103401567_03-512.webp 512w
-            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-            <img class="no-save"
-                src="./KakaoTalk_20250926_103401567_03.jpg"
-                data-full="./KakaoTalk_20250926_103401567_03.jpg"
-                alt="0926-03"
                 width="1024" height="1365"
                 loading="lazy" decoding="async"
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
@@ -1185,27 +1156,6 @@
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
           </picture>
 
-          <!-- 0926 _10 -->
-          <picture>
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_10-1024.avif 1024w,
-              ./KakaoTalk_20250926_103401567_10-768.avif 768w,
-              ./KakaoTalk_20250926_103401567_10-512.avif 512w
-            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_10-1024.webp 1024w,
-              ./KakaoTalk_20250926_103401567_10-768.webp 768w,
-              ./KakaoTalk_20250926_103401567_10-512.webp 512w
-            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-            <img class="no-save"
-                src="./KakaoTalk_20250926_103401567_10.jpg"
-                data-full="./KakaoTalk_20250926_103401567_10.jpg"
-                alt="0926-10"
-                width="1024" height="1365"
-                loading="lazy" decoding="async"
-                draggable="false" oncontextmenu="return false" onmousedown="return false">
-          </picture>
-
           <!-- 0926 _11 -->
           <picture>
             <source data-srcset="
@@ -1227,27 +1177,6 @@
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
           </picture>
 
-          <!-- 0926 _12 -->
-          <picture>
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_12-1024.avif 1024w,
-              ./KakaoTalk_20250926_103401567_12-768.avif 768w,
-              ./KakaoTalk_20250926_103401567_12-512.avif 512w
-            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
-            <source data-srcset="
-              ./KakaoTalk_20250926_103401567_12-1024.webp 1024w,
-              ./KakaoTalk_20250926_103401567_12-768.webp 768w,
-              ./KakaoTalk_20250926_103401567_12-512.webp 512w
-            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
-            <img class="no-save"
-                src="./KakaoTalk_20250926_103401567_12.jpg"
-                data-full="./KakaoTalk_20250926_103401567_12.jpg"
-                alt="0926-12"
-                width="1024" height="1365"
-                loading="lazy" decoding="async"
-                draggable="false" oncontextmenu="return false" onmousedown="return false">
-          </picture>
-
           <!-- 0926 _13 -->
           <picture>
             <source data-srcset="
@@ -1264,6 +1193,27 @@
                 src="./KakaoTalk_20250926_103401567_13.jpg"
                 data-full="./KakaoTalk_20250926_103401567_13.jpg"
                 alt="0926-13"
+                width="1024" height="1365"
+                loading="lazy" decoding="async"
+                draggable="false" oncontextmenu="return false" onmousedown="return false">
+          </picture>
+
+          <!-- 0926 _10 -->
+          <picture>
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_10-1024.avif 1024w,
+              ./KakaoTalk_20250926_103401567_10-768.avif 768w,
+              ./KakaoTalk_20250926_103401567_10-512.avif 512w
+            " type="image/avif" sizes="(min-width:760px) 33vw, 33vw">
+            <source data-srcset="
+              ./KakaoTalk_20250926_103401567_10-1024.webp 1024w,
+              ./KakaoTalk_20250926_103401567_10-768.webp 768w,
+              ./KakaoTalk_20250926_103401567_10-512.webp 512w
+            " type="image/webp" sizes="(min-width:760px) 33vw, 33vw">
+            <img class="no-save"
+                src="./KakaoTalk_20250926_103401567_10.jpg"
+                data-full="./KakaoTalk_20250926_103401567_10.jpg"
+                alt="0926-10"
                 width="1024" height="1365"
                 loading="lazy" decoding="async"
                 draggable="false" oncontextmenu="return false" onmousedown="return false">
@@ -1402,6 +1352,7 @@
           <div class="prev" id="lbPrev" aria-label="이전">‹</div>
           <img class="no-save" alt="preview" draggable="false" oncontextmenu="return false" onmousedown="return false">
           <div class="next" id="lbNext" aria-label="다음">›</div>
+          <div class="lb-pager" id="lbPager" aria-live="polite"></div> <!-- ✅ 추가 -->
         </div>
       </div>
     </section>
@@ -1629,6 +1580,7 @@
     })();
 
     document.addEventListener('DOMContentLoaded', () => {
+      
       /* prod에서 webp/avif srcset 활성화 + 프리로드 */
       const isProd = location.hostname === 'smjhwedding.github.io';
       if (isProd) {
@@ -1720,46 +1672,92 @@
       });
 
       /* 라이트박스 */
-      const thumbs = Array.from(document.querySelectorAll('#gallery picture img'));
-      const lb = document.getElementById('lightbox');
-      const lbImg = lb?.querySelector('img');
-      const prevBtn = document.getElementById('lbPrev');
-      const nextBtn = document.getElementById('lbNext');
-      let idx = 0, touchStartX = 0;
+       // 한 번만 바인딩되도록 가드
+      if (!window.__lbInit) {
+        window.__lbInit = true;
 
-      function openAt(i){
-        if (!lb || !lbImg) return;
-        idx = (i + thumbs.length) % thumbs.length;
-        const t = thumbs[idx];
-        const full = t.getAttribute('data-full');
-        lbImg.src = full || t.currentSrc || t.src;
-        lb.classList.add('open');
+        const lb      = document.getElementById('lightbox');
+        const lbImg   = lb?.querySelector('img');
+        const prevBtn = document.getElementById('lbPrev');
+        const nextBtn = document.getElementById('lbNext');
+        const pager   = document.getElementById('lbPager');
+
+        let idx = 0;
+        let touchStartX = 0;
+
+        // 현재 갯수 기준으로 항상 최신(total) 계산
+        function totalCount() {
+          return document.querySelectorAll('#gallery picture img').length;
+        }
+
+        function updatePager() {
+          if (!pager) return;
+          pager.textContent = `${idx + 1} / ${totalCount()}`;
+        }
+
+        function openAt(i) {
+          if (!lb || !lbImg) return;
+          const list  = document.querySelectorAll('#gallery picture img');
+          const total = list.length;
+          if (!total) return;
+
+          idx = (i + total) % total;
+          const t    = list[idx];
+          const full = t.getAttribute('data-full');
+          lbImg.src  = full || t.currentSrc || t.src;
+
+          lb.classList.add('open');
+          updatePager();
+        }
+
+        function closeLb() {
+          if (!lb || !lbImg) return;
+          lb.classList.remove('open');
+          lbImg.src = '';
+          if (pager) pager.textContent = '';
+        }
+
+        function next() { openAt(idx + 1); }
+        function prev() { openAt(idx - 1); }
+
+        // 썸네일 클릭 -> 열기
+        const thumbs = Array.from(document.querySelectorAll('#gallery picture img'));
+        thumbs.forEach((img, i) => {
+          img.addEventListener('click', () => openAt(i), { passive: true });
+        });
+
+        // 배경(어두운 영역) 클릭 -> 닫기
+        lb?.addEventListener('click', (e) => {
+          if (e.target === lb) closeLb();
+        });
+
+        // ESC/화살표 키
+        document.addEventListener('keydown', (e) => {
+          if (!lb?.classList.contains('open')) return;
+          if (e.key === 'Escape')      closeLb();
+          else if (e.key === 'ArrowRight') next();
+          else if (e.key === 'ArrowLeft')  prev();
+        });
+
+        // 이전/다음 버튼
+        prevBtn?.addEventListener('click', (e) => { e.stopPropagation(); prev(); });
+        nextBtn?.addEventListener('click', (e) => { e.stopPropagation(); next(); });
+
+        // 스와이프(모바일)
+        lbImg?.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].clientX;
+        }, { passive: true });
+
+        lbImg?.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          if (Math.abs(dx) > 40) (dx < 0 ? next() : prev());
+        }, { passive: true });
+
+        // 길게 누르기/우클릭 저장 방지(선택)
+        document.addEventListener('contextmenu', (e) => {
+          if (e.target.closest('#gallery') || e.target.closest('#lightbox')) e.preventDefault();
+        });
       }
-      function closeLb(){ if(!lb||!lbImg) return; lb.classList.remove('open'); lbImg.src = ''; }
-      function next(){ openAt(idx+1) }
-      function prev(){ openAt(idx-1) }
-
-      thumbs.forEach((img,i)=> img.addEventListener('click', ()=> openAt(i)));
-      lb?.addEventListener('click', (e)=>{ if(e.target === lb) closeLb(); });
-      document.addEventListener('keydown', (e)=>{
-        if(!lb?.classList.contains('open')) return;
-        if(e.key === 'Escape') closeLb();
-        if(e.key === 'ArrowRight') next();
-        if(e.key === 'ArrowLeft') prev();
-      });
-      nextBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); next(); });
-      prevBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); prev(); });
-
-      lbImg?.addEventListener('touchstart', (e)=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
-      lbImg?.addEventListener('touchend', (e)=>{
-        const delta = e.changedTouches[0].clientX - touchStartX;
-        if(Math.abs(delta) > 40){ delta < 0 ? next() : prev(); }
-      }, {passive:true});
-
-      document.addEventListener('contextmenu', (e)=>{
-        if(e.target.closest('#gallery') || e.target.closest('#lightbox')) e.preventDefault();
-      });
-
       /* 캘린더 */
       (function(){
         const title = '상민 ♥ 진희 결혼식';
@@ -2085,9 +2083,6 @@
         }, true);
       })();
 
-
-
-
       (function warmupGalleryImages(){
         const gal = document.getElementById('gallery');
         if (!gal) return;
@@ -2124,6 +2119,8 @@
 
         imgs.forEach(img => io.observe(img));
       })();
+
+      
 
     });
 
