@@ -1845,33 +1845,34 @@
         async function loadWithProgress(url){
           if (!url || !lbImg) return;
 
-          // 이전 요청 중단
+          // 진행 중 요청 중단
           if (currentLoad.controller) { try { currentLoad.controller.abort(); } catch(_) {} }
           const token = ++currentLoad.token;
           const controller = new AbortController();
           currentLoad.controller = controller;
 
-          // 0) 메모리에 있으면 즉시 교체(진행바 숨김)
+          // 메모리 LRU 즉시 히트
           const mem = memGet(url);
           if (mem){
             lbImg.src = mem.objUrl;
-            hideProgress();
-            // 백그라운드로 끝난 처리 없음 → 종료
+            try { await lbImg.decode?.(); } catch(_){}
+            // 메모리 히트는 진행바 표시 안 함
             return;
           }
 
-          // 1) Cache Storage 에 있으면 즉시 표시(디코딩 보장)
+          // CacheStorage 히트
           const cacheResp = await cacheMatch(url);
           if (cacheResp){
             const blob = await cacheResp.blob();
             memPut(url, blob);
             lbImg.src = memGet(url).objUrl;
-            hideProgress();
+            try { await lbImg.decode?.(); } catch(_){}
             return;
           }
 
-          // 2) 네트워크로 스트리밍 진행률
+          // 네트워크 단계만 진행바 표시
           showProgress();
+          const set = (v) => setProgress(Math.min(99, v)); // 네트워크 단계에서는 99%를 넘지 않게
           try {
             const resp = await fetch(url, { signal: controller.signal, cache: 'force-cache' });
             if (!resp.ok) throw new Error('HTTP '+resp.status);
@@ -1889,45 +1890,64 @@
                 if (done) break;
                 chunks.push(value); loaded += value.byteLength;
 
-                if (token !== currentLoad.token) return; // 중간 취소
+                if (token !== currentLoad.token) return; // 중간 취소되면 종료
 
-                if (hasLen) setProgress((loaded/total)*100);
-                else {
-                  const pseudo = Math.min(95, 40 + Math.log10(1 + loaded/4096) * 30);
-                  setProgress(pseudo);
+                if (hasLen){
+                  const pct = (loaded / total) * 90; // 전송은 최대 90%
+                  set(pct);
+                } else {
+                  // content-length 없으면 40→88% 사이 로깅 기반 가짜 진행
+                  const pseudo = Math.min(88, 40 + Math.log10(1 + loaded / 4096) * 30);
+                  set(pseudo);
                 }
               }
 
+              // 전송 완료 → Blob 생성
               const blob = new Blob(chunks, { type: resp.headers.get('content-type') || 'image/jpeg' });
               if (token !== currentLoad.token) return;
 
+              // 95%: 교체 직전
+              setProgress(95);
+
+              // 메모리/LRU에 넣고 교체
               memPut(url, blob);
-              lbImg.src = memGet(url).objUrl;
+              const { objUrl } = memGet(url);
+              lbImg.src = objUrl;
+
+              // 디코딩 대기(디코딩이 길면 체감상 '멈춘 것'처럼 보이던 문제 해결)
+              try { await lbImg.decode?.(); } catch(_){}
+
+              // 100% → 살짝 지연 후 숨김
               setProgress(100);
               setTimeout(hideProgress, 120);
 
-              // 캐시에 넣어 재방문/새 세션 가속
+              // CacheStorage에도 넣어 다음 세션 가속
               cachePut(url, new Response(blob, { headers: { 'Content-Type': blob.type }}));
+
             } else {
-              // 스트림 미지원 폴백
+              // 스트림 미지원 폴백: 60% → 95% → decode 완료 후 100%
               setProgress(60);
               await new Promise((resolve, reject) => {
                 const im = new Image();
                 im.onload = resolve; im.onerror = reject; im.src = url;
               });
               if (token !== currentLoad.token) return;
+
+              setProgress(95);
               lbImg.src = url;
+              try { await lbImg.decode?.(); } catch(_){}
               setProgress(100);
               setTimeout(hideProgress, 120);
 
-              // fetch로 받아 캐시에 넣기(백그라운드)
+              // 백그라운드 캐시 채우기
               fetch(url).then(r=> r.ok && cachePut(url, r)).catch(()=>{});
             }
           } catch(e){
             if (e.name !== 'AbortError') console.warn('이미지 로드 실패:', e);
-            hideProgress(); // 실패하거나 취소돼도 UI는 풀어준다
+            hideProgress();
           }
         }
+
 
         /* ---------- 열기/닫기/이동 ---------- */
         function openAt(i){
