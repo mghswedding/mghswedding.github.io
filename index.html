@@ -21,7 +21,9 @@
   <link rel="icon" href="/favicon.ico" />
 
   <style>
-    /* ===== Webfonts ===== */
+    /* =========================
+      0) Webfonts
+      ========================= */
     @font-face {
       font-family: "SUIT Variable";
       src: url("https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/woff2/SUIT-Variable.woff2") format("woff2-variations");
@@ -30,28 +32,24 @@
     @font-face{
       font-family: "Autography";
       src: url("./Autography.woff2") format("woff2");
-      font-weight: 400 800;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 400 800; font-style: normal; font-display: swap;
     }
     @font-face{
       font-family: "Hakgyoansim Geurimilgi";
       src:
         url("./HakgyoansimGeurimilgiOTFR.otf") format("opentype"),
         url("./HakgyoansimGeurimilgiTTFR.ttf") format("truetype");
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
+      font-weight: normal; font-style: normal; font-display: swap;
     }
-    /* SVG 전용: 루트의 OTF 사용 */
     @font-face{
       font-family: "AutographySVG";
       src: url("./Autography.otf") format("opentype");
-      font-weight: 400 800;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 400 800; font-style: normal; font-display: swap;
     }
 
+    /* =========================
+      1) Root / Base
+      ========================= */
     :root{
       --accent: #edacb1;
       --ink: #313131;
@@ -65,52 +63,54 @@
       --font-sans: "SUIT Variable", "Noto Sans KR", Apple SD Gothic Neo, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
       --font-fancy: "Autography", "Hakgyoansim Geurimilgi", "SUIT Variable", system-ui, -apple-system, "Noto Sans KR", sans-serif;
 
-      /* ↓↓↓ 글씨 쓰는 속도 빠르게 (기존 대비 ↑) */
-      --draw-dur: 1.25s;   /* 선 그리기 */
-      --fill-dur: 1.20s;   /* 채움 */
-      --per-letter: .08s;  /* 글자 간 간격 */
-      --fill-gap: .60s;    /* 선→채움 지연 */
+      /* SVG 필기 애니 속도 */
+      --draw-dur: 1.25s;
+      --fill-dur: 1.20s;
+      --per-letter: .08s;
+      --fill-gap: .60s;
 
       --inv-track:.02em;
       --bride-nudge:.7px;
+
+      --reveal-dur: 900ms; /* 인터뷰 등장 */
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
     html{ font-size: calc(16px + 2pt); }
-    @media (max-width: 759px) { 
-      html{ font-size: calc(16px + 2pt); }
-    }
+    @media (max-width: 759px){ html{ font-size: calc(16px + 2pt); } }
+
     html,body{
-      margin:0;padding:0;background:var(--bg);color:var(--ink);
-      font-family:var(--font-fancy);-webkit-font-smoothing:antialiased;
-      overflow-x:hidden;
-      width:100%; /* FIX: 레이아웃 안전 */
+      margin:0; padding:0; background:var(--bg); color:var(--ink);
+      font-family:var(--font-fancy); -webkit-font-smoothing:antialiased;
+      overflow-x:hidden; width:100%;
     }
 
-    a{color:inherit;text-decoration:none}
+    a{ color:inherit; text-decoration:none; }
 
+    /* 가운데 정렬 래퍼 */
     .wrap{
       max-width: var(--maxw);
-      width: 100%;               /* FIX: 420px 고정 -> 100%로 변경 */
+      width: 100%;
       margin: 0 auto;
-      padding: 0 10px;           /* FIX: 작은 화면에서 좌우 여백 확보 (잘림 방지) */
+      padding: 0 10px;
     }
     .wrap > section{ margin: 36px 0; }
     @media (min-width:760px){ .wrap > section{ margin: 48px 0; } }
 
-    /* ===== HERO: 고정 높이 ===== */
+    /* =========================
+      2) HERO
+      ========================= */
     .hero{
       position:relative; overflow:hidden; border-radius:var(--radius);
-      height:560px;
-      background:#000;
-      color:#fff; display:flex; align-items:flex-end; justify-content:center; text-align:center; box-shadow:var(--shadow);
-      width:100%;               /* FIX: 부모 폭 따르기 */
+      height:560px; background:#000; color:#fff;
+      display:flex; align-items:flex-end; justify-content:center; text-align:center;
+      box-shadow:var(--shadow); width:100%;
     }
-
     .hero-media{
       position:absolute; inset:0; z-index:0; display:block; width:100%; height:100%; object-fit:cover;
       animation: kenburnsPlus 26s ease-in-out infinite;
       filter: brightness(1.04) contrast(1.03) saturate(1.06) drop-shadow(0 12px 40px rgba(0,0,0,.28));
-      transform: scale(1.02); /* ← 살짝 축소: iOS 가장자리 깨짐 방지 */
+      transform: scale(1.02);
       transform-origin: 50% 60%;
       will-change: transform;
       -webkit-mask-image: radial-gradient(120% 100% at 50% 35%, #000 62%, rgba(0,0,0,0) 100%);
@@ -125,175 +125,143 @@
       100% { transform: scale(1.04) translate3d(0, 0, 0) rotate(.2deg);           transform-origin: 48% 62%; }
     }
     .hero::after{
-      content:"";position:absolute;inset:0;
+      content:""; position:absolute; inset:0; z-index:1;
       background:
         radial-gradient(80% 40% at 50% 0%, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 60%),
         linear-gradient(0deg, rgba(0,0,0,.34) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,0) 70%);
-      z-index:1;
     }
 
-    /* === SVG 타이포그래피 === */
+    /* SVG 타이포그래피 */
     .hero-svg{
       position:absolute; inset:0; width:100%; height:100%;
       pointer-events:none; z-index:2;
+      contain: paint; backface-visibility: hidden; transform: translateZ(0);
     }
     .hero-svg text{ text-anchor: middle; paint-order: stroke fill; }
-
-    .hero-inner{ position:relative; z-index:4; padding:40px 18px 26px }
-
+    .hero-inner{ position:relative; z-index:4; padding:40px 18px 26px; }
     .svg-top{ animation: floatTop 8s ease-in-out infinite; }
     @keyframes floatTop{ 0%,100%{ transform: translateY(0px) } 50%{ transform: translateY(2px) } }
-
     .svg-top .stroke{
-      fill: transparent;
-      stroke: rgba(255,255,255,.7);   /* ✅ 흰색 윤곽선: 약하게 */
-      stroke-width: 2.6px;           /* ✅ 선 굵기 ↑ */
-      stroke-linecap: round; 
-      stroke-linejoin: round;
-      vector-effect: non-scaling-stroke;
+      fill: transparent; stroke: rgba(255,255,255,.7); stroke-width: 2.6px;
+      stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke;
+      filter: none !important;
     }
-    .fill-top{    
-      fill:#CDEED3;   /* ✅ 연두색 → 더 진한 녹색 느낌 */
-      fill-opacity:1; /* ✅ 불투명하게 */
-    }
-    .fill-bottom{ 
-      fill:#E89CB2;   /* ✅ 핑크 → 더 진한 톤 */
-      fill-opacity:1; 
-    }
+    .fill-top{    fill:#CDEED3; fill-opacity:1; }
+    .fill-bottom{ fill:#E89CB2; fill-opacity:1; }
+    .hero-svg .fancy{ font-family: "AutographySVG","Autography","Hakgyoansim Geurimilgi",cursive; letter-spacing:.02em; }
+    .hero-svg .wgm-line{ letter-spacing: -0.16em; visibility: visible !important; }
 
-    .hero-svg .fancy{
-      font-family: "AutographySVG", "Autography", "Hakgyoansim Geurimilgi", cursive;
-      letter-spacing: .02em;
-    }
-    .hero-svg .wgm-line{ letter-spacing: -0.16em; }
-
-    .glyph{ opacity:0 }
+    .glyph{ opacity: 0; }
     .glyph.stroke{
-      stroke-dasharray: 1200;
-      stroke-dashoffset: 1200;
-      animation: drawLetter 3.6s ease forwards;
-      animation-delay: calc(var(--i) * 0.42s + .50s);
+      stroke-dasharray: 1200; stroke-dashoffset: 1200;
+      animation: wgmDraw var(--draw-dur) ease forwards;
+      animation-delay: calc(var(--row-delay, 0s) + var(--i) * var(--per-letter));
+      will-change: stroke-dashoffset; backface-visibility: hidden;
+    }
+    @keyframes wgmDraw{
+      0% { opacity:1; stroke-dashoffset:1200; filter:blur(.2px) }
+      85%{ opacity:1; }
+      100%{ opacity:1; stroke-dashoffset:0; }
     }
     .glyph.fill{
-      animation: fillLetter 1.4s ease forwards;
-      animation-delay: calc(var(--i) * 0.42s + 2.4s);
+      animation: wgmFill var(--fill-dur) ease forwards;
+      animation-delay: calc(var(--row-delay, 0s) + var(--fill-gap) + var(--i) * var(--per-letter));
     }
+    @keyframes wgmFill{
+      from { opacity:0; transform: translateY(4px) scale(1.01) }
+      to   { opacity:1; transform:none }
+    }
+    .wgm-row{
+      transform-origin: 50% 50%;
+      animation: wgmTiltDiag var(--intro-dur, 700ms) cubic-bezier(.2,.65,.2,1) both;
+      animation-delay: var(--row-delay, 0s);
+    }
+    @keyframes wgmTiltDiag{
+      0%{ opacity:0; transform: translate(-22px,16px) rotate(-4deg) skewX(-3deg); }
+      100%{ opacity:1; transform: translate(0,0) rotate(1.8deg) skewX(1.2deg); }
+    }
+    @media (max-width:480px){
+      :root{ --draw-dur:1.15s; --fill-dur:1.10s; --per-letter:.10s; --fill-gap:.55s; }
+      @keyframes kenburnsPlus{
+        0%{ transform: scale(1.03) translate3d(0,0,0) rotate(.1deg); }
+        50%{ transform: scale(1.06) translate3d(.6%,-.6%,0) rotate(.2deg); }
+        100%{ transform: scale(1.03) translate3d(0,0,0) rotate(.1deg); }
+      }
+    }
+    .hero-svg.measuring .wgm-row{ animation:none !important; transform:none !important; }
+    .hero-svg.animfix .svg-top{ -webkit-mask:none !important; mask:none !important; clip-path:none !important; }
+    .hero-svg.done .glyph,
+    .hero-svg.done .glyph.stroke,
+    .hero-svg.done .glyph.fill{ animation:none !important; opacity:1 !important; }
+    .hero-svg.done .glyph.stroke{ stroke-dashoffset:0 !important; }
+    .hero-svg.done .wgm-row, .hero-svg.done .svg-top{ animation-play-state: paused !important; }
 
     .date-plain{
       color:#fff; line-height:1.42; display:inline-block; font-weight:500;
-      text-shadow: 0 2px 6px rgba(0,0,0,.35);
-      max-width:100%; /* FIX: 긴 문장이 부모 폭 넘지 않도록 */
+      text-shadow: 0 2px 6px rgba(0,0,0,.35); max-width:100%;
     }
-    .date-plain .d1, .date-plain .d2{ display:block }
-    .date-plain .d1{ font-size:1.08rem }
-    .date-plain .d2{ font-size:1.0rem; opacity:.98 }
+    .date-plain .d1, .date-plain .d2{ display:block; }
+    .date-plain .d1{ font-size:1.08rem; }
+    .date-plain .d2{ font-size:1.0rem; opacity:.98; }
 
     .dday-badge{
-      position:absolute;top:10px;left:50%;transform:translateX(-50%);
-      z-index:4;background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.45);
-      padding:6px 10px;border-radius:999px;font-size:.78rem;backdrop-filter: blur(6px);
-      color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35);
-      white-space:nowrap; /* FIX: 배지 줄바꿈 방지 */
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      z-index:4; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.45);
+      padding:6px 10px; border-radius:999px; font-size:.78rem; backdrop-filter: blur(6px);
+      color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35); white-space:nowrap;
     }
 
-    /* 공통 */
-    h2.section-title{ text-align:center; margin:22px 0 8px; color:var(--accent); font-weight:400; letter-spacing:.02em;font-size:1.2rem; }
-    .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:10px 0;}
-    .grid{display:grid;gap:12px}
-    @media (min-width: 760px){
-      .grid.cols-2{grid-template-columns:1fr 1fr}
-      .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    /* =========================
+      3) Common UI
+      ========================= */
+    h2.section-title{
+      text-align:center; margin:22px 0 8px; color:var(--accent);
+      font-weight:400; letter-spacing:.02em; font-size:1.2rem;
     }
-    .muted{color:var(--muted)}
-    .center{text-align:center}
-    .small{font-size:1rem}
-    .btn{ display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:12px 14px;border-radius:10px;background:var(--accent);color:#313131;font-weight:700;border:none;cursor:pointer; box-shadow:0 6px 18px rgba(237,172,177,.35);font-size:.92rem;white-space:nowrap; }
-    .btn.ghost{background:#fff;border:1px solid #eee;box-shadow:none}
-    .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,#eee,transparent);margin:12px 0}
-    details{border-radius:12px;padding:0;overflow:hidden;border:none}
-    details summary{cursor:pointer;list-style:none;font-weight:800;display:flex;align-items:center;justify-content:space-between;font-size:.95rem;padding:12px 14px;}
-    details .rows{padding:8px 14px 12px}
-    .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .copy{font-size:.78rem;border:1px dashed #7774;border-radius:999px;padding:4px 8px;cursor:pointer}
-    details.groom{ background: #eaf6ff; border:1px solid #d5ecff }
-    details.bride{ background: #fff0f5; border:1px solid #ffe1ea }
-    .countdown{display:flex;justify-content:center;gap:6px;margin-top:4px;flex-wrap:wrap} /* FIX: 작은 폭에서 줄바꿈 허용 */
-    .cd-box{width:70px;height:70px;border-radius:12px;background:#fff;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center}
-    .cd-number{font-size:1.16rem;font-weight:800}
-    .cd-label{font-size:.7rem;color:var(--muted)}
-    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-    .gallery picture{ display:block; aspect-ratio: 3 / 4; }
-    .gallery picture > img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .gallery img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;cursor:pointer}
-    .no-save{ -webkit-user-drag: none; user-select:none; -webkit-user-select:none }
-    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50}
-    .lightbox.open{display:flex}
-    .lightbox .lb-inner{position:relative;max-width:92vw;max-height:86vh;display:flex;align-items:center;justify-content:center}
-    .lightbox img{max-width:92vw;max-height:86vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.5);object-fit:contain;touch-action:none;}
-    .lightbox .prev,
-    .lightbox .next {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 42px;        /* 화살표 크기 키우기 */
-      color: #fff;            /* 글자색만 표시 */
-      cursor: pointer;
-      user-select: none;
-      background: none;       /* 🔥 배경 제거 */
-      border: none;           /* 🔥 테두리 제거 */
-      box-shadow: none;       /* 🔥 그림자 제거 */
-      width: auto;
-      height: auto;
-      padding: 0;
+    .card{ background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; margin:10px 0; }
+    .grid{ display:grid; gap:12px; }
+    @media (min-width:760px){
+      .grid.cols-2{ grid-template-columns:1fr 1fr; }
+      .grid.cols-3{ grid-template-columns:repeat(3,1fr); }
     }
-
-    /* 위치만 조절 */
-    .lightbox .prev { left: 16px; }
-    .lightbox .next { right: 16px; }
-
-    /* 작은 화면에서도 동일하게 */
-    @media (max-width: 560px) {
-      .lightbox .prev { left: 10px; }
-      .lightbox .next { right: 10px; }
-      .lightbox .prev,
-      .lightbox .next { font-size: 36px; }
+    .muted{ color:var(--muted); }
+    .center{ text-align:center; }
+    .small{ font-size:1rem; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:12px 14px; border-radius:10px; background:var(--accent); color:#313131;
+      font-weight:700; border:none; cursor:pointer; box-shadow:0 6px 18px rgba(237,172,177,.35);
+      font-size:.92rem; white-space:nowrap;
     }
-
-    .lightbox,
-    .lightbox .lb-inner {
-      touch-action: none;              /* 사파리 일부 버전 보완용 */
-      overscroll-behavior: contain;    /* 뷰포트 바운스 방지 */
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
+    .btn.ghost{ background:#fff; border:1px solid #eee; box-shadow:none; }
+    .btns{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .divider{ height:1px; background:linear-gradient(90deg,transparent,#eee,transparent); margin:12px 0; }
+    details{ border-radius:12px; padding:0; overflow:hidden; border:none; }
+    details summary{
+      cursor:pointer; list-style:none; font-weight:800; display:flex; align-items:center; justify-content:space-between;
+      font-size:.95rem; padding:12px 14px;
     }
+    details .rows{ padding:8px 14px 12px; }
+    .row{ display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .copy{ font-size:.78rem; border:1px dashed #7774; border-radius:999px; padding:4px 8px; cursor:pointer; }
 
-
-    /* INTERVIEW */
-    .interview{ padding:8px 8px; background:#fff7fa; border-radius:14px }
+    /* =========================
+      4) Interview
+      ========================= */
+    .interview{ padding:8px; background:#fff7fa; border-radius:14px; }
     .interview .title{
       text-align:center; margin:22px 0 8px; color:var(--accent); letter-spacing:.02em; font-weight:400; font-size:1.2rem;
     }
-    .interview .subtitle{ text-align:center; margin:0 0 6px 0; color:var(--muted); font-size:1rem; font-weight:400; }
+    .interview .subtitle{ text-align:center; margin:0 0 6px; color:var(--muted); font-size:1rem; font-weight:400; }
     .interview-inner{ max-width:460px; margin:0 auto; }
-
-    /* 강한 등장용 공통 지속시간(원하면 700~1100ms로 조절) */
-    :root{ --reveal-dur: 900ms; }
-
     .inter-q{
       font-size: calc(1.8rem * .7); margin:8px 0 6px; text-align:center; font-weight:800;
       opacity:0; transform: translateY(14px);
     }
-    .inter-q.show{
-      animation: qIn var(--reveal-dur) cubic-bezier(.2,.7,.2,1.1) forwards;
-    }
-    @keyframes qIn{
-      0%   { opacity:0; transform: translateY(16px) }
-      100% { opacity:1; transform: none }
-    }
+    .inter-q.show{ animation: qIn var(--reveal-dur) cubic-bezier(.2,.7,.2,1.1) forwards; }
+    @keyframes qIn{ 0%{opacity:0; transform:translateY(16px)} 100%{opacity:1; transform:none} }
 
-    .bubble_container{ display:grid; gap:2px; padding:0 0; margin:0 0 6px 0; }
-
+    .bubble_container{ display:grid; gap:2px; margin:0 0 6px; }
     .bubble_box{
       display:flex; flex-direction:column; gap:1px; width:72%; margin:0 auto;
       opacity:0; filter: blur(3px);
@@ -301,200 +269,94 @@
       will-change: transform, opacity, filter;
     }
     .bubble_box.left{  align-items:flex-start; transform: translate(-10px,22px) scale(.96); }
-    .bubble_box.right{ align-items:flex-end;   transform: translate( 10px,22px) scale(.96); }
-
+    .bubble_box.right{ align-items:flex-end;   transform: translate(10px,22px) scale(.96); }
     .bubble_box .name{ font-weight:900; font-size: calc(1.64rem * .7); color:#777; line-height:1.12; }
-
     .bubble_text{
-      display:inline-block;border-radius:12px; padding: calc(12px * .7) calc(14px * .7);
+      display:inline-block; border-radius:12px; padding: calc(12px * .7) calc(14px * .7);
       font-size: calc(1.8rem * .7); line-height:1.44; box-shadow:var(--shadow); max-width:100%;
       word-break: keep-all;
     }
-    .left .bubble_text{ background:#eaf6ff } 
-    .right .bubble_text{ background:var(--accent); color:#313131 }
-
-    /* 등장 애니메이션(스태거 지연은 JS가 넣어줌) */
+    .left .bubble_text{ background:#eaf6ff; }
+    .right .bubble_text{ background:var(--accent); color:#313131; }
     .bubble_box.show{
       animation: bubbleIn var(--reveal-dur) cubic-bezier(.2,.7,.2,1.1) forwards;
       animation-delay: var(--delay, 0s);
     }
     @keyframes bubbleIn{
-      0%   { opacity:0; filter:blur(3px); transform: translateY(28px) scale(.95); }
-      60%  { opacity:1; filter:blur(0);   transform: translateY(-4px) scale(1.02); }
-      100% { opacity:1; filter:blur(0);   transform: none; }
+      0%{ opacity:0; filter:blur(3px); transform: translateY(28px) scale(.95); }
+      60%{ opacity:1; filter:blur(0);   transform: translateY(-4px) scale(1.02); }
+      100%{ opacity:1; filter:blur(0);  transform: none; }
     }
-
-    /* 말풍선 팝-섀도 */
     .bubble_box.show .bubble_text{
       animation: popShadow calc(var(--reveal-dur) * .9) ease-out forwards;
       animation-delay: calc(var(--delay,0s) + 120ms);
     }
     @keyframes popShadow{
-      0%   { box-shadow: 0 4px 10px rgba(0,0,0,.08); }
-      60%  { box-shadow: 0 14px 28px rgba(0,0,0,.18); }
-      100% { box-shadow: var(--shadow); }
+      0%{ box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+      60%{ box-shadow: 0 14px 28px rgba(0,0,0,.18); }
+      100%{ box-shadow: var(--shadow); }
     }
-
-    /* 반응형(기존 크기 유지) */
     @media (max-width:430px){
       .inter-q{ font-size: calc(1.6rem * .7); margin:6px 0 4px; }
-      .bubble_container{ gap:2px; margin-bottom:6px }
+      .bubble_container{ gap:2px; margin-bottom:6px; }
       .bubble_box{ width:82%; }
       .bubble_text{ font-size: calc(1.6rem * .7); padding: calc(10px * .7) calc(12px * .7); line-height:1.4; }
       .bubble_box .name{ font-size: calc(1.48rem * .7); }
     }
 
-
+    /* =========================
+      5) Invitation
+      ========================= */
     #invitation .poem{ font-size:1.02rem; line-height:1.45; white-space:pre-line; margin:0; }
-    #invitation .small{ font-size:1.0rem }
+    #invitation .small{ font-size:1.0rem; }
+    #invitation .small p{ margin:0; line-height:1.35; }
+    #invitation .small p + p{ margin-top:4px; }
 
-    /* INVITATION 이름 줄 간격만 타이트하게 */
-    #invitation .small p { 
-      margin: 0;              /* 기본 위/아래 마진 제거 */
-      line-height: 1.35;      /* 줄 높이 살짝만 */
-    }
-
-    /* 바로 다음 p(= 신부 줄)만 살짝 띄우기 */
-    #invitation .small p + p { 
-      margin-top: 4px;        /* 필요하면 2~6px로 조절 */
-    }
-
-    /* 두 줄 공통: 같은 자간 + 커닝/합자 끔 */
     #invitation .inv-rows .left-info,
     #invitation .inv-rows b{
-      letter-spacing: var(--inv-track); /* 기본 .02em */
+      letter-spacing: var(--inv-track);
       font-kerning: none;
       font-variant-ligatures: none;
       font-feature-settings: "kern" 0, "liga" 0;
       text-rendering: optimizeSpeed;
     }
-
-    /* 아이콘이 있는 신부 줄만 아주 미세하게 넓힘(시각 보정) */
     #invitation .inv-rows .left-info:has(.icon-chry){
       letter-spacing: calc(var(--inv-track) + .014em);
     }
+    #invitation .inv-rows b.bride{ transform: translateX(calc(var(--bride-nudge) * -1)); }
 
-    #invitation .inv-rows b.bride{
-      transform: translateX(calc(var(--bride-nudge) * -1));
-    }
-
-    .icon-chry{ display:inline-flex; vertical-align:-2px; margin-right:4px }
+    .icon-chry{ display:inline-flex; vertical-align:-2px; margin-right:4px; }
     .icon-chry svg{ width:1.05em; height:1.05em; }
+
     .navi{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; align-items:center; justify-items:center; }
     .navi .btn{ width:100%; flex:none; padding:10px 8px; font-size:.9rem; min-width:0; }
 
-    footer{padding:22px 0 14px;text-align:center;color:var(--muted);font-size:.9rem}
+    header.wrap{ margin-top:16px; }
 
-    .spark-layer{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden}
-    .spark-layer canvas{position:absolute; inset:0; width:100%; height:100%; filter:blur(.4px)}
-
-    @media (max-width: 759px){
-      .card.center{ background: transparent; box-shadow: none; border-radius: 0; padding: 0; margin: 0; }
-    }
-
-    .hero-svg .wgm-line{ visibility: visible !important; }
-
-    .wgm-row{
-      transform-origin: 50% 50%;
-      animation: wgmTiltDiag var(--intro-dur, 700ms) cubic-bezier(.2,.65,.2,1) both;
-      animation-delay: var(--row-delay, 0s);
-    }
-    @keyframes wgmTiltDiag{
-      0%{ opacity: 0; transform: translate(-22px, 16px) rotate(-4deg) skewX(-3deg); }
-      100%{ opacity: 1; transform: translate(0,0) rotate(1.8deg) skewX(1.2deg); }
-    }
-
-    .glyph{ opacity: 0 }
-    .glyph.stroke{
-      stroke-dasharray: 1200; stroke-dashoffset: 1200;
-      animation: wgmDraw var(--draw-dur) ease forwards;
-      animation-delay: calc(var(--row-delay, 0s) + var(--i) * var(--per-letter));
-    }
-    @keyframes wgmDraw{
-      0%   { opacity: 1; stroke-dashoffset: 1200; filter: blur(.2px) }
-      85%  { opacity: 1; }
-      100% { opacity: 1; stroke-dashoffset: 0; }
-    }
-    .glyph.fill{
-      animation: wgmFill var(--fill-dur) ease forwards;
-      animation-delay: calc(var(--row-delay, 0s) + var(--fill-gap) + var(--i) * var(--per-letter));
-    }
-    @keyframes wgmFill{
-      from { opacity: 0; transform: translateY(4px) scale(1.01) }
-      to   { opacity: 1; transform: none }
-    }
-
-    /* 참고용 클래스 (미사용) */
-    .svg_text .two-lines { display: block; width: 100%; height: auto; }
-    .svg_text .hand-text { font-family: "Nanum Pen Script", "Pacifico", "Caveat", cursive; font-weight: 700; font-size: 64px; letter-spacing: 0.5px; dominant-baseline: hanging; }
-    @media (max-width: 600px) { .svg_text .hand-text { font-size: 42px; } }
-
-    .hero-svg .stroke { filter: none; }  /* drop-shadow 제거 */
-    @media (max-width: 480px) {
-      :root{
-        --draw-dur: 1.15s;
-        --fill-dur: 1.10s;
-        --per-letter: .10s;
-        --fill-gap: .55s;
-      }
-    }
-
-    @media (max-width: 480px) {
-      @keyframes kenburnsPlus{
-        0%   { transform: scale(1.03) translate3d(0,0,0) rotate(.1deg); }
-        50%  { transform: scale(1.06) translate3d(.6%,-.6%,0) rotate(.2deg); }
-        100% { transform: scale(1.03) translate3d(0,0,0) rotate(.1deg); }
-      }
-    }
-    .hero-svg.measuring .wgm-row{ animation:none !important; transform:none !important; }
-
-    /* 애니 구간에만 마스크/클립 잠깐 해제해서 번쩍임 제거 */
-    .hero-svg.animfix .svg-top{
-      -webkit-mask: none !important;
-      mask: none !important;
-      clip-path: none !important;
-    }
-
-    /* 합성 안정화 힌트 (가속/뒤면 숨김) */
-    .hero-svg{ contain: paint; backface-visibility: hidden; transform: translateZ(0); }
-    .glyph.stroke{ will-change: stroke-dashoffset; backface-visibility: hidden; }
-
-    /* 혹시 남아있다면 stroke에 그림자 필터가 깜빡임 유발 → 확실히 차단 */
-    .svg-top .stroke{ filter: none !important; }
-
-    /* 애니 한 번 끝나면 완전 고정: 재스크롤/리페인트에도 재생 안 됨 */
-    .hero-svg.done .glyph,
-    .hero-svg.done .glyph.stroke,
-    .hero-svg.done .glyph.fill{
-      animation: none !important;
-      opacity: 1 !important;
-    }
-
-    .hero-svg.done .glyph.stroke{
-      stroke-dashoffset: 0 !important; /* 선 그리기 최종값 유지 */
-    }
-
-    /* 한 줄 유지 */
-    .name-line{
-      display:inline-flex;
+    /* 가운데 정렬 + 좌우 끝 맞춤 그리드 */
+    .inv-rows{
+      display:grid;
+      grid-template-columns: max-content max-content;
+      column-gap:12px; row-gap:4px;
+      justify-content:center; /* ✅ 전체를 중앙으로 */
       align-items:baseline;
-      justify-content:flex-start;
-      gap:8px;
-      white-space:nowrap;
+    }
+    .inv-row{ display:contents; }
+    .inv-rows .left-info{
+      justify-self:start; text-align:left; position:relative; padding-left:5px;
+    }
+    .inv-rows b{ justify-self:end; white-space:nowrap; }
+    .inv-rows .icon-chry{
+      position:absolute; left:-16px; top:50%; transform:translateY(-45%); display:inline-flex;
     }
 
-    /* ✅ 왼쪽 정보(span)만 자간 변수 적용 */
-    .name-line .left-info{ letter-spacing: var(--track, normal); }
-
-    /* ===========================
-      ACCOUNT (새 디자인)
-      =========================== */
-    .account { }
-
+    /* =========================
+      6) Account (Accordion)
+      ========================= */
+    .account{}
     .acc-accordion{ display:grid; gap:12px; }
     .acc-accordion details{
-      background:#fff; border:1px solid #eee; border-radius:12px;
-      box-shadow:var(--shadow); overflow:hidden;
+      background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:var(--shadow); overflow:hidden;
     }
     .acc-accordion summary{
       position:relative; padding:14px 44px 14px 14px;
@@ -506,181 +368,200 @@
       transform:translateY(-50%); font-size:14px; color:#9aa0a6;
     }
     .acc-accordion details[open] summary::after{ content:"▴"; }
-
-    .acc-rows{ padding:0 }
+    .acc-rows{ padding:0; }
     .acc-item{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding:14px; border-top:1px dashed #e9e9e9; background:#fff;
     }
     .acc-item:first-child{ border-top:none; }
     .acc-left{ min-width:0; }
-    .acc-title{ font-weight:800; margin:0 0 6px 0; font-size:.95rem; color:#444; }
+    .acc-title{ font-weight:800; margin:0 0 6px; font-size:.95rem; color:#444; }
     .acc-number{ font-family:var(--font-sans); font-size:1.02rem; font-weight:800; letter-spacing:.02em; }
     .acc-bank{ font-size:.88rem; color:var(--muted); margin-top:2px; }
-
     .btn-copy.copy{
       flex:0 0 auto; border:1px solid #e1e1e1; background:#fff; border-radius:10px;
       font-size:.86rem; padding:8px 10px; cursor:pointer;
     }
-    .btn-copy.copy:active{ transform:translateY(1px) }
+    .btn-copy.copy:active{ transform:translateY(1px); }
+    #acc-groom{ border-color:#d5ecff; }       #acc-groom > summary{ background:#eaf6ff; }
+    #acc-bride{ border-color:#ffe1ea; }       #acc-bride > summary{ background:#fff0f5; }
+    #acc-groom[open] > summary::after{ color:#68a9da; }  #acc-bride[open] > summary::after{ color:#e38cab; }
+    #acc-groom .acc-item{ background:#ffffff; } #acc-bride .acc-item{ background:#ffffff; }
 
+    /* =========================
+      7) D-DAY
+      ========================= */
+    .countdown{ display:flex; justify-content:center; gap:6px; margin-top:4px; flex-wrap:wrap; }
+    .cd-box{ width:70px; height:70px; border-radius:12px; background:#fff; box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .cd-number{ font-size:1.16rem; font-weight:800; }
+    .cd-label{ font-size:.7rem; color:var(--muted); }
 
-    /* 계좌 토글 색상: 신랑=연하늘, 신부=연핑크 */
-    #acc-groom{ border-color:#d5ecff; }
-    #acc-groom > summary{ background:#eaf6ff; }
-
-    #acc-bride{ border-color:#ffe1ea; }
-    #acc-bride > summary{ background:#fff0f5; }
-
-    /* 열렸을 때 화살표 색상 살짝 맞춤(선택) */
-    #acc-groom[open] > summary::after{ color:#68a9da; }
-    #acc-bride[open] > summary::after{ color:#e38cab; }
-
-    #acc-groom .acc-item{ background:#ffffff; }   /* 필요 시 #f7fbff 등 아주 연하게 변경 가능 */
-    #acc-bride .acc-item{ background:#ffffff; }   /* 필요 시 #fff6fa 등 아주 연하게 변경 가능 */
-
-    /* === INVITATION 이름 두 줄 정렬: 가운데 배치 + 좌우 끝 맞춤 === */
-    .inv-rows{
-      display: grid;
-      grid-template-columns: max-content max-content; /* 두 칼럼 너비를 각 행의 최대 내용에 맞춰 동일화 */
-      column-gap: 12px;
-      row-gap: 4px;
-      justify-content: center; /* 전체 블록을 가운데로 */
-      align-items: baseline;
-    }
-
-    /* 각 행의 p는 레이아웃 상 "투명" 처리해서, 내부 2개 아이템이 부모 그리드의 두 칼럼에 올라가게 함 */
-    .inv-row{ display: contents; }
-
-    /* 왼쪽 설명(부모님 소개) = 좌측 칼럼: 시작점(왼쪽) 정렬 → '시작'이 두 줄에서 동일 위치 */
-    .inv-rows .left-info{
-      justify-self: start;
-      text-align: left;
-      position: relative;
-      padding-left: 5px; /* 아이콘 공간 */
-    }
-
-    /* 오른쪽 이름(신랑/신부 이름) = 우측 칼럼: 끝점(오른쪽) 정렬 → '종료'가 두 줄에서 동일 위치 */
-    .inv-rows b{
-      justify-self: end;
-      white-space: nowrap;
-    }
-
-    /* 아이콘은 왼쪽으로 살짝 튀어나오게 */
-    .inv-rows .icon-chry{
-      position: absolute;
-      left: -16px;    /* 더 튀어나오게 하려면 -18~-22px 정도로 조절 */
-      top: 50%;
-      transform: translateY(-45%);
-      display: inline-flex;
-    }
-
-    /* 화면 맨 위 여백 */
-    header.wrap {
-      margin-top: 16px; /* 16px → 20px 등 원하는 만큼 조절 */
-    }
-
-    /* === 글자 애니메이션 1회만 (자연스럽게 고정) === */
-    /* 줄 기울기/등장, 상단 둥실 효과 모두 현재 프레임에서 일시정지 */
-    .hero-svg.done .wgm-row,
-    .hero-svg.done .svg-top{
-      animation-play-state: paused !important;
-    }
-
-    /* 글리프는 이미 최종 상태로 고정 (필기/채움 값 유지) */
-    .hero-svg.done .glyph,
-    .hero-svg.done .glyph.stroke,
-    .hero-svg.done .glyph.fill{
-      animation: none !important;
-      opacity: 1 !important;
-    }
-    .hero-svg.done .glyph.stroke{
-      stroke-dashoffset: 0 !important;
-    }
-
-    /* === GALLERY: 가로 스크롤 (picture 자체 크기 축소) === */
+    /* =========================
+      8) Gallery (Horizontal)
+      ========================= */
     .gallery-wrap{ position:relative; }
-
     .gallery{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:0 10px;
-      overflow-x:auto;
-      overflow-y:hidden;
+      display:flex; align-items:center; gap:12px; padding:0 10px;
+      overflow-x:auto; overflow-y:hidden;
       scroll-snap-type:x mandatory;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
+      touch-action: pan-x; /* 수평 제스처 네이티브 */
     }
     .gallery::-webkit-scrollbar{ display:none; }
-    .gallery{ scrollbar-width: none; }
+    .gallery{ scrollbar-width:none; }
 
-    /* picture 자체 크기 ↓ */
     .gallery picture{
-      flex: 0 0 auto;
-      width: 70vw;                /* ✅ 화면 폭의 70%만 사용 */
-      max-width: 280px;           /* ✅ 절대 상한 */
-      aspect-ratio: 3 / 4;        /* 세로 비율 유지 */
-      height: auto;
-      scroll-snap-align: center;
-      display:block;
+      flex:0 0 auto; width:70vw; max-width:280px; aspect-ratio:3/4; height:auto;
+      display:block; scroll-snap-align:center; scroll-snap-stop:always;
     }
-
-    /* 작은 화면 */
-    @media (max-width: 559px){
-      .gallery picture{
-        width: 72vw;
-        max-width: 240px;
-      }
-    }
-
-    /* 태블릿 */
-    @media (min-width: 560px) and (max-width: 759px){
-      .gallery picture{
-        width: 60vw;
-        max-width: 300px;
-      }
-    }
-
-    /* 데스크탑 */
-    @media (min-width: 760px){
-      .gallery picture{
-        width: 50vw;
-        max-width: 320px;
-      }
-    }
+    @media (max-width:559px){ .gallery picture{ width:72vw; max-width:240px; } }
+    @media (min-width:560px) and (max-width:759px){ .gallery picture{ width:60vw; max-width:300px; } }
+    @media (min-width:760px){ .gallery picture{ width:50vw; max-width:320px; } }
 
     .gallery picture > img{
-      width:100%; height:100%;
-      object-fit:cover; display:block;
-      border-radius:10px; cursor:pointer;
-      -webkit-user-drag:none; user-select:none;
+      width:100%; height:100%; object-fit:cover; display:block;
+      border-radius:10px; cursor:pointer; -webkit-user-drag:none; user-select:none;
     }
 
-    /* 터치에서는 브라우저가 가로 스크롤을 책임지게 */
-    .gallery{
-      touch-action: pan-x;        /* ← 수평 제스처는 네이티브로 */
+    /* =========================
+      9) Lightbox (FIX: 화살표 클릭 이슈)
+      ========================= */
+    .no-save{ -webkit-user-drag:none; user-select:none; -webkit-user-select:none; }
+
+    .lightbox{
+      position:fixed; inset:0; background:rgba(0,0,0,.85);
+      display:none; align-items:center; justify-content:center; z-index:50;
+    }
+    .lightbox.open{ display:flex; }
+
+    .lightbox .lb-inner{
+      position:relative; max-width:92vw; max-height:86vh;
+      display:flex; align-items:center; justify-content:center; z-index:0;
     }
 
-    /* 스냅 안정성 ↑ : 지나칠 때 반드시 스냅 지점에서 멈춤 */
-    .gallery picture{
-      scroll-snap-stop: always;
+    .lightbox img{
+      max-width:92vw; max-height:86vh; border-radius:12px;
+      box-shadow:0 8px 40px rgba(0,0,0,.5);
+      object-fit:contain; touch-action:none;
+      position:relative; z-index:1; /* 이미지 z-index는 낮게 둠 */
     }
 
-    /* 라이트박스 페이지 표시 */
+    /* ← 핵심 수정: 버튼이 항상 위(z:5), 히트영역↑, pointer-events 보장 */
+    .lightbox .prev,
+    .lightbox .next{
+      position:absolute; top:50%; transform:translateY(-50%);
+      font-size:42px; color:#fff; cursor:pointer;
+      user-select:none; -webkit-user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action: manipulation;
+      background:none; border:none; box-shadow:none;
+      width:auto; height:auto; min-width:44px; min-height:44px; padding:0 6px;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:auto;
+      z-index:5;
+    }
+    .lightbox .prev{ left:16px; }
+    .lightbox .next{ right:16px; }
+
+    @media (max-width:560px){
+      .lightbox .prev{ left:10px; }
+      .lightbox .next{ right:10px; }
+      .lightbox .prev, .lightbox .next{ font-size:36px; }
+    }
+
+    /* 컨테이너 터치 제스처 충돌 방지 */
+    .lightbox, .lightbox .lb-inner{
+      touch-action:none; overscroll-behavior:contain;
+      -webkit-user-select:none; -webkit-touch-callout:none;
+    }
+
+    /* 페이지 표시(버튼보다 낮게) */
     .lb-pager{
-      position:absolute;
-      left:50%; bottom:10px; transform:translateX(-50%);
+      position:absolute; left:50%; bottom:10px; transform:translateX(-50%);
       padding:6px 10px; border-radius:999px;
       background:rgba(0,0,0,.55); color:#fff;
       font-family:var(--font-sans); font-weight:800; font-size:.50rem;
       line-height:1; letter-spacing:.02em;
       backdrop-filter:blur(6px);
       border:1px solid rgba(255,255,255,.35);
-      user-select:none;
+      user-select:none; z-index:2;
     }
-    @media (min-width:760px){ .lb-pager{ display:none; } } /* 모바일만 표시 */
+    @media (min-width:760px){ .lb-pager{ display:none; } }
 
+    .lightbox .prev,
+    .lightbox .next{
+      position: absolute !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      transform: none !important;               /* 중앙 정렬 트랜스폼 제거 */
+      width: clamp(48px, 10vw, 80px) !important;/* 세로 스트립 히트영역 */
+      padding: 0 !important;
+      margin: 0 !important;
+
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      background: linear-gradient(to right, rgba(0,0,0,.12), rgba(0,0,0,0)) !important;
+      color: #fff !important;
+      font-size: clamp(32px, 4.6vw, 48px) !important;
+      line-height: 1 !important;
+
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+      touch-action: manipulation !important;
+      pointer-events: auto !important;
+      z-index: 6 !important;                     /* 이미지/페이저보다 위 */
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .lightbox .prev{ 
+      left: 0 !important;
+      right: auto !important;
+      border-radius: 0 8px 8px 0 !important;     /* 살짝만 둥글게(선택) */
+      /* 좌측은 왼쪽→오른쪽 방향 그라데이션 */
+      background: linear-gradient(to right, rgba(0,0,0,.12), rgba(0,0,0,0)) !important;
+    }
+    .lightbox .next{ 
+      right: 0 !important;
+      left: auto !important;
+      border-radius: 8px 0 0 8px !important;
+      /* 우측은 오른쪽→왼쪽 방향 그라데이션 */
+      background: linear-gradient(to left, rgba(0,0,0,.12), rgba(0,0,0,0)) !important;
+    }
+
+    /* 모바일에서 스트립 조금 더 넓게 */
+    @media (max-width: 560px){
+      .lightbox .prev,
+      .lightbox .next{
+        width: clamp(56px, 14vw, 96px) !important;
+        font-size: clamp(28px, 5.6vw, 42px) !important;
+      }
+    }
+
+    /* 페이저와 이미지 z-index 정리(화살표 > 페이저 > 이미지) */
+    .lightbox .lb-inner img{ z-index: 1 !important; }
+    .lightbox .lb-pager{ z-index: 3 !important; }
+
+    /* =========================
+      10) Utilities
+      ========================= */
+    @media (max-width: 759px){
+      .card.center{ background:transparent; box-shadow:none; border-radius:0; padding:0; margin:0; }
+    }
+    .spark-layer{ position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .spark-layer canvas{ position:absolute; inset:0; width:100%; height:100%; filter:blur(.4px); }
+
+    /* 이름 한 줄 유지 & 중앙 보정 */
+    .name-line{
+      display:inline-flex; align-items:baseline; justify-content:flex-start; gap:8px; white-space:nowrap;
+    }
+    .name-line .left-info{ letter-spacing: var(--track, normal); }
+
+    footer{ padding:22px 0 14px; text-align:center; color:var(--muted); font-size:.9rem; }
   </style>
 </head>
 <body>
