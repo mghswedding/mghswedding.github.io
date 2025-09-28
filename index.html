@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" /> <!-- FIX: user-scalabled -> user-scalable -->
   <title>저희 결혼합니다 | 상민 ♥ 진희</title>
 
+  <link rel="preconnect" href="https://smjhwedding.github.io" crossorigin>
   <!-- OG / 공유 썸네일 -->
   <meta property="og:title" content="저희 결혼합니다" />
   <meta property="og:description" content="2025년 12월 13일 (토) 오후 2시 · 더에스비웨딩컨벤션" />
@@ -653,7 +654,7 @@
       left:50%; bottom:10px; transform:translateX(-50%);
       padding:6px 10px; border-radius:999px;
       background:rgba(0,0,0,.55); color:#fff;
-      font-family:var(--font-sans); font-weight:800; font-size:.82rem;
+      font-family:var(--font-sans); font-weight:800; font-size:.50rem;
       line-height:1; letter-spacing:.02em;
       backdrop-filter:blur(6px);
       border:1px solid rgba(255,255,255,.35);
@@ -1673,6 +1674,60 @@
 
       /* 라이트박스 */
        // 한 번만 바인딩되도록 가드
+      const FullImageCache = new Map(); // url -> Promise<void>
+
+      function allowAggressivePrefetch(){
+        const c = navigator.connection || {};
+        if (c.saveData) return false;
+        const fast = ['4g','5g'].includes(c.effectiveType);
+        return fast || !c.effectiveType; // 미지원이면 일단 허용
+      }
+
+      function preloadFull(url){
+        if (!url) return Promise.resolve();
+        if (FullImageCache.has(url)) return FullImageCache.get(url);
+
+        const p = new Promise((resolve)=>{
+          // <link rel=prefetch> : 네트워크 힌트
+          try{
+            const l = document.createElement('link');
+            l.rel = 'prefetch';
+            l.as  = 'image';
+            l.href = url;
+            document.head.appendChild(l);
+          }catch(_){}
+
+          // Image 객체로 실제 다운로드 + 디코딩 예약
+          const im = new Image();
+          im.decoding = 'async';
+          im.onload = async ()=> { try { await im.decode(); } catch(_) {} ; resolve(); };
+          im.onerror = ()=> resolve(); // 실패해도 막지 않음
+          im.src = url;
+        });
+
+        FullImageCache.set(url, p);
+        return p;
+      }
+
+      // 주변 인덱스 원본 선로딩
+      function prefetchAroundIndex(index, span=2){
+        const list = document.querySelectorAll('#gallery picture img');
+        const total = list.length;
+        if (!total) return;
+
+        const targets = new Set();
+        for (let d=0; d<=span; d++){
+          const a = (index + d) % total;
+          const b = (index - d + total) % total;
+          [a,b].forEach(i=>{
+            const img = list[i];
+            const full = img?.getAttribute('data-full');
+            if (full) targets.add(full);
+          });
+        }
+        targets.forEach(url=> preloadFull(url));
+      }
+
       if (!window.__lbInit) {
         window.__lbInit = true;
 
@@ -1685,7 +1740,6 @@
         let idx = 0;
         let touchStartX = 0;
 
-        // 현재 갯수 기준으로 항상 최신(total) 계산
         function totalCount() {
           return document.querySelectorAll('#gallery picture img').length;
         }
@@ -1702,12 +1756,32 @@
           if (!total) return;
 
           idx = (i + total) % total;
-          const t    = list[idx];
-          const full = t.getAttribute('data-full');
-          lbImg.src  = full || t.currentSrc || t.src;
+          const t       = list[idx];
+          const full    = t.getAttribute('data-full');               // 원본
+          const thumbSrc= t.currentSrc || t.src;                     // 썸네일/현재 표시중
+
+          // 1) 썸네일 즉시
+          try { lbImg.fetchPriority = 'high'; } catch(_) {}
+          lbImg.src = thumbSrc;
+
+          // 2) 원본 미리 다운로드+디코드 → 같은 인덱스면 자연 교체
+          if (full) {
+            preloadFull(full).then(()=>{
+              if (!lb.classList.contains('open')) return;
+              if (document.querySelectorAll('#gallery picture img')[idx] === t) {
+                lbImg.src = full; // 최종 원본 화질
+              }
+            });
+          }
 
           lb.classList.add('open');
           updatePager();
+
+          // 3) 이웃 원본 선로딩
+          prefetchAroundIndex(idx, 2);
+          if (allowAggressivePrefetch()){
+            (window.requestIdleCallback || setTimeout)(()=> prefetchAroundIndex(idx, 4), { timeout: 1200 });
+          }
         }
 
         function closeLb() {
@@ -1726,12 +1800,12 @@
           img.addEventListener('click', () => openAt(i), { passive: true });
         });
 
-        // 배경(어두운 영역) 클릭 -> 닫기
+        // 배경 클릭 -> 닫기
         lb?.addEventListener('click', (e) => {
           if (e.target === lb) closeLb();
         });
 
-        // ESC/화살표 키
+        // ESC/화살표
         document.addEventListener('keydown', (e) => {
           if (!lb?.classList.contains('open')) return;
           if (e.key === 'Escape')      closeLb();
@@ -1747,7 +1821,6 @@
         lbImg?.addEventListener('touchstart', (e) => {
           touchStartX = e.changedTouches[0].clientX;
         }, { passive: true });
-
         lbImg?.addEventListener('touchend', (e) => {
           const dx = e.changedTouches[0].clientX - touchStartX;
           if (Math.abs(dx) > 40) (dx < 0 ? next() : prev());
@@ -1757,6 +1830,16 @@
         document.addEventListener('contextmenu', (e) => {
           if (e.target.closest('#gallery') || e.target.closest('#lightbox')) e.preventDefault();
         });
+
+        // 초기 진입 시, 앞 3~4장 원본 예열
+        (function warmupFirstOriginals(){
+          const list = document.querySelectorAll('#gallery picture img');
+          const first = Math.min(list.length, 4);
+          for (let i=0; i<first; i++){
+            const full = list[i].getAttribute('data-full');
+            if (full) preloadFull(full);
+          }
+        })();
       }
       /* 캘린더 */
       (function(){
