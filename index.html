@@ -563,7 +563,7 @@
 
     footer{ padding:22px 0 14px; text-align:center; color:var(--muted); font-size:.9rem; }
 
-    /* === Lightbox 로딩 프로그레스 === */
+    /* === Lightbox 로딩 프로그레스 (교체) === */
     .lb-progress{
       position:absolute;
       left:50%; bottom:16px; transform:translateX(-50%);
@@ -572,7 +572,10 @@
       background:rgba(0,0,0,.55); color:#fff;
       border:1px solid rgba(255,255,255,.35);
       backdrop-filter: blur(6px);
-      z-index: 7; /* 화살표/페이저 위 */
+      /* 🔧 진행 중에도 화살표/이미지 클릭 가능하도록 */
+      pointer-events: none;
+      /* 화살표(z:6)보다 낮게, 페이저(z:3)보다 살짝 높게 */
+      z-index:4;
       font-family: var(--font-sans);
     }
     .lb-progress .lb-bar{
@@ -591,6 +594,7 @@
       .lb-progress{ bottom:12px; }
       .lb-progress .lb-bar{ width:120px; }
     }
+
 
   </style>
 </head>
@@ -1723,8 +1727,10 @@
         targets.forEach(url=> preloadFull(url));
       }
 
-      if (!window.__lbInit) {
-        window.__lbInit = true;
+      /* ===== 라이트박스 + 캐시/선로딩 업그레이드 (교체) ===== */
+      (function setupLightboxWithCaching(){
+        if (window.__lbInitV2) return;  // 중복 방지
+        window.__lbInitV2 = true;
 
         const lb      = document.getElementById('lightbox');
         const lbImg   = lb?.querySelector('img');
@@ -1732,10 +1738,13 @@
         const nextBtn = document.getElementById('lbNext');
         const pager   = document.getElementById('lbPager');
 
+        /* ---------- 환경/도우미 ---------- */
+        const thumbs = Array.from(document.querySelectorAll('#gallery picture img'));
+        const total  = thumbs.length;
         let idx = 0;
         let touchStartX = 0;
 
-        // ====== Progress UI (생성/재사용) ======
+        // 진행바 엘리먼트 (없으면 생성)
         let prog = lb?.querySelector('.lb-progress');
         if (!prog && lb) {
           const inner = lb.querySelector('.lb-inner');
@@ -1758,56 +1767,133 @@
           pct.textContent = p + '%';
         };
 
-        // 진행 중 요청 취소/정리용
-        let currentLoad = { controller: null, token: 0, objUrl: null };
-
-        function totalCount() {
-          return document.querySelectorAll('#gallery picture img').length;
+        // 네트워크 스택
+        function allowAggressivePrefetch(){
+          const c = navigator.connection || {};
+          if (c.saveData) return false;
+          const fast = ['4g','5g'].includes(c.effectiveType);
+          return fast || !c.effectiveType; // 미지원이면 일단 허용
         }
 
-        function updatePager() {
-          if (!pager) return;
-          pager.textContent = `${idx + 1} / ${totalCount()}`;
+        /* ---------- 캐시 계층 ----------
+          1) 메모리 LRU (가장 빠름, 세션 내 즉시 표시)
+          2) Cache Storage (origin 단위 영속 캐시)
+        --------------------------------- */
+
+        // 1) 메모리 LRU(Blob) + 즉시 쓸 objectURL
+        const MAX_MEM_ITEMS = 20;  // 필요시 조절
+        const memMap = new Map();  // url -> { blob, objUrl }
+        function memHas(url){ return memMap.has(url); }
+        function memGet(url){
+          const v = memMap.get(url);
+          if (!v) return null;
+          // LRU 갱신
+          memMap.delete(url); memMap.set(url, v);
+          return v;
+        }
+        function memPut(url, blob){
+          // 기존 objUrl 정리
+          const old = memMap.get(url);
+          if (old?.objUrl) URL.revokeObjectURL(old.objUrl);
+          const objUrl = URL.createObjectURL(blob);
+          memMap.set(url, { blob, objUrl });
+          // LRU 트리밍
+          while (memMap.size > MAX_MEM_ITEMS){
+            const [k, val] = memMap.entries().next().value;
+            if (val?.objUrl) URL.revokeObjectURL(val.objUrl);
+            memMap.delete(k);
+          }
         }
 
-        // 원본 이미지 로드 + 진행률 표시
-        async function loadWithProgress(url) {
+        // 2) Cache Storage
+        const CACHE_NAME = 'lb-full-img-v1';
+        async function cacheMatch(url){
+          try {
+            const c = await caches.open(CACHE_NAME);
+            return await c.match(url);
+          } catch(_) { return null; }
+        }
+        async function cachePut(url, resp){
+          try {
+            const c = await caches.open(CACHE_NAME);
+            await c.put(url, resp.clone());
+          } catch(_) {}
+        }
+
+        /* ---------- 진행 중 요청 취소 토큰 ---------- */
+        let currentLoad = { controller: null, token: 0 };
+
+        /* ---------- 유틸 ---------- */
+        function totalCount(){ return total; }
+        function updatePager(){ if (pager) pager.textContent = `${idx + 1} / ${totalCount()}`; }
+
+        // 주변 인덱스 원본들
+        function surroundingFullUrls(center, span=2){
+          const urls = [];
+          for (let d=0; d<=span; d++){
+            const a = (center + d + total) % total;
+            const b = (center - d + total) % total;
+            [a,b].forEach(i=>{
+              const url = thumbs[i]?.getAttribute('data-full');
+              if (url && !urls.includes(url)) urls.push(url);
+            });
+          }
+          return urls;
+        }
+
+        /* ---------- 핵심: 원본 로드(진행률/캐시 반영) ---------- */
+        async function loadWithProgress(url){
           if (!url || !lbImg) return;
 
-          // 이전 요청 중단 및 정리
+          // 이전 요청 중단
           if (currentLoad.controller) { try { currentLoad.controller.abort(); } catch(_) {} }
-          if (currentLoad.objUrl) { URL.revokeObjectURL(currentLoad.objUrl); currentLoad.objUrl = null; }
-
           const token = ++currentLoad.token;
           const controller = new AbortController();
           currentLoad.controller = controller;
 
+          // 0) 메모리에 있으면 즉시 교체(진행바 숨김)
+          const mem = memGet(url);
+          if (mem){
+            lbImg.src = mem.objUrl;
+            hideProgress();
+            // 백그라운드로 끝난 처리 없음 → 종료
+            return;
+          }
+
+          // 1) Cache Storage 에 있으면 즉시 표시(디코딩 보장)
+          const cacheResp = await cacheMatch(url);
+          if (cacheResp){
+            const blob = await cacheResp.blob();
+            memPut(url, blob);
+            lbImg.src = memGet(url).objUrl;
+            hideProgress();
+            return;
+          }
+
+          // 2) 네트워크로 스트리밍 진행률
           showProgress();
           try {
             const resp = await fetch(url, { signal: controller.signal, cache: 'force-cache' });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            if (!resp.ok) throw new Error('HTTP '+resp.status);
 
             const total = Number(resp.headers.get('content-length') || 0);
             const hasLen = Number.isFinite(total) && total > 0;
 
-            if (resp.body?.getReader) {
+            if (resp.body?.getReader){
               const reader = resp.body.getReader();
               const chunks = [];
               let loaded = 0;
 
-              while (true) {
+              while (true){
                 const { done, value } = await reader.read();
                 if (done) break;
-                chunks.push(value);
-                loaded += value.byteLength;
+                chunks.push(value); loaded += value.byteLength;
 
-                // 중간에 다른 이미지로 넘어갔으면 중단
-                if (token !== currentLoad.token) return;
+                if (token !== currentLoad.token) return; // 중간 취소
 
-                if (hasLen) setProgress((loaded / total) * 100);
+                if (hasLen) setProgress((loaded/total)*100);
                 else {
-                  // content-length 없을 때 점진적 표시
-                  const pseudo = Math.min(95, 40 + Math.log10(1 + loaded / 4096) * 30);
+                  const pseudo = Math.min(95, 40 + Math.log10(1 + loaded/4096) * 30);
                   setProgress(pseudo);
                 }
               }
@@ -1815,123 +1901,164 @@
               const blob = new Blob(chunks, { type: resp.headers.get('content-type') || 'image/jpeg' });
               if (token !== currentLoad.token) return;
 
-              const objUrl = URL.createObjectURL(blob);
-              currentLoad.objUrl = objUrl;
-              lbImg.src = objUrl;
+              memPut(url, blob);
+              lbImg.src = memGet(url).objUrl;
               setProgress(100);
-              setTimeout(() => { if (token === currentLoad.token) hideProgress(); }, 120);
+              setTimeout(hideProgress, 120);
+
+              // 캐시에 넣어 재방문/새 세션 가속
+              cachePut(url, new Response(blob, { headers: { 'Content-Type': blob.type }}));
             } else {
               // 스트림 미지원 폴백
               setProgress(60);
               await new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = url;
+                const im = new Image();
+                im.onload = resolve; im.onerror = reject; im.src = url;
               });
               if (token !== currentLoad.token) return;
               lbImg.src = url;
               setProgress(100);
-              setTimeout(() => { if (token === currentLoad.token) hideProgress(); }, 120);
+              setTimeout(hideProgress, 120);
+
+              // fetch로 받아 캐시에 넣기(백그라운드)
+              fetch(url).then(r=> r.ok && cachePut(url, r)).catch(()=>{});
             }
-          } catch (err) {
-            if (err.name === 'AbortError') return;
-            hideProgress();
-            console.warn('이미지 로드 실패:', err);
+          } catch(e){
+            if (e.name !== 'AbortError') console.warn('이미지 로드 실패:', e);
+            hideProgress(); // 실패하거나 취소돼도 UI는 풀어준다
           }
         }
 
-        function openAt(i) {
-          if (!lb || !lbImg) return;
-          const list  = document.querySelectorAll('#gallery picture img');
-          const total = list.length;
-          if (!total) return;
-
+        /* ---------- 열기/닫기/이동 ---------- */
+        function openAt(i){
+          if (!lb || !lbImg || !total) return;
           idx = (i + total) % total;
-          const t        = list[idx];
-          const full     = t.getAttribute('data-full');               // 원본 경로
-          const thumbSrc = t.currentSrc || t.src;                     // 썸네일/현재 표시중
 
-          // 1) 썸네일 즉시 표시
+          const t        = thumbs[idx];
+          const full     = t.getAttribute('data-full');
+          const thumbSrc = t.currentSrc || t.src;
+
           try { lbImg.fetchPriority = 'high'; } catch(_) {}
-          lbImg.src = thumbSrc;
+          lbImg.src = thumbSrc;     // 썸네일 즉시
 
-          // 2) 라이트박스 열고 페이저 갱신
           lb.classList.add('open');
           updatePager();
 
-          // 3) 이웃 원본 선로딩 (네트워크 여건 따라 공격적 선로딩)
-          prefetchAroundIndex(idx, 2);
-          if (allowAggressivePrefetch()){
-            (window.requestIdleCallback || setTimeout)(() => prefetchAroundIndex(idx, 4), { timeout: 1200 });
+          // 근처는 바로 선로딩
+          queuePrefetch(surroundingFullUrls(idx, 2));
+          if (allowAggressivePrefetch()) {
+            (window.requestIdleCallback || setTimeout)(() => queuePrefetch(surroundingFullUrls(idx, 4)), { timeout: 1200 });
           }
 
-          // 4) 원본을 진행률과 함께 로드해 자연스럽게 교체
+          // 원본 교체 시도(캐시/메모리 → 네트워크)
           if (full) loadWithProgress(full);
           else hideProgress();
         }
-
-        function closeLb() {
+        function closeLb(){
           if (!lb || !lbImg) return;
           lb.classList.remove('open');
           lbImg.src = '';
           if (pager) pager.textContent = '';
           hideProgress();
-          // 진행 중이면 취소
           if (currentLoad.controller) { try { currentLoad.controller.abort(); } catch(_) {} }
-          if (currentLoad.objUrl) { URL.revokeObjectURL(currentLoad.objUrl); currentLoad.objUrl = null; }
         }
+        function next(){ openAt(idx + 1); }
+        function prev(){ openAt(idx - 1); }
 
-        function next() { openAt(idx + 1); }
-        function prev() { openAt(idx - 1); }
-
-        // 썸네일 클릭 -> 열기
-        const thumbs = Array.from(document.querySelectorAll('#gallery picture img'));
+        // 썸네일 클릭 → 열기
         thumbs.forEach((img, i) => {
           img.addEventListener('click', () => openAt(i), { passive: true });
         });
 
-        // 배경 클릭 -> 닫기
-        lb?.addEventListener('click', (e) => {
-          if (e.target === lb) closeLb();
-        });
+        // 배경 클릭 → 닫기
+        lb?.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
 
-        // ESC/키보드 화살표
+        // ESC/화살표
         document.addEventListener('keydown', (e) => {
           if (!lb?.classList.contains('open')) return;
-          if (e.key === 'Escape')      closeLb();
+          if (e.key === 'Escape') closeLb();
           else if (e.key === 'ArrowRight') next();
           else if (e.key === 'ArrowLeft')  prev();
         });
 
-        // 이전/다음 버튼
+        // 버튼
         prevBtn?.addEventListener('click', (e) => { e.stopPropagation(); prev(); });
         nextBtn?.addEventListener('click', (e) => { e.stopPropagation(); next(); });
 
-        // 스와이프(모바일)
-        lbImg?.addEventListener('touchstart', (e) => {
-          touchStartX = e.changedTouches[0].clientX;
-        }, { passive: true });
-        lbImg?.addEventListener('touchend', (e) => {
+        // 스와이프
+        lbImg?.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+        lbImg?.addEventListener('touchend',   (e) => {
           const dx = e.changedTouches[0].clientX - touchStartX;
           if (Math.abs(dx) > 40) (dx < 0 ? next() : prev());
         }, { passive: true });
 
-        // 길게 누르기/우클릭 저장 방지(선택)
+        // 저장 방지(선택)
         document.addEventListener('contextmenu', (e) => {
           if (e.target.closest('#gallery') || e.target.closest('#lightbox')) e.preventDefault();
         });
 
-        // 초기 진입 시, 앞 3~4장 원본 예열
-        (function warmupFirstOriginals(){
-          const list = document.querySelectorAll('#gallery picture img');
-          const first = Math.min(list.length, 4);
+        /* ---------- 백그라운드 선로딩 큐 ---------- */
+        const prefetchQueue = [];
+        let prefetching = 0;
+        const MAX_CONCURRENCY = 2;
+
+        function enqueue(url){
+          if (!url) return;
+          // 이미 메모리/큐/캐시에 있으면 건너뜀
+          if (memHas(url) || prefetchQueue.includes(url)) return;
+          prefetchQueue.push(url);
+          pump();
+        }
+
+        function queuePrefetch(urls){
+          urls.forEach(u => enqueue(u));
+        }
+
+        async function pump(){
+          if (prefetching >= MAX_CONCURRENCY) return;
+          const url = prefetchQueue.shift();
+          if (!url) return;
+
+          prefetching++;
+          try {
+            // 캐시에 이미 있나 확인
+            if (await cacheMatch(url)) return;
+            // 조용히 다운로드 → 디코드 → 메모리/캐시에 저장
+            const resp = await fetch(url, { cache: 'force-cache' });
+            if (resp.ok){
+              const blob = await resp.clone().blob();
+              // decode 힌트 (브라우저에 따라 효과 없음)
+              try { await createImageBitmap(blob); } catch(_){}
+              memPut(url, blob);
+              cachePut(url, resp);
+            }
+          } catch(_){}
+          finally{
+            prefetching--;
+            // 아이들 때 계속 진행
+            if ('requestIdleCallback' in window){
+              requestIdleCallback(() => pump(), { timeout: 1500 });
+            } else {
+              setTimeout(pump, 50);
+            }
+          }
+        }
+
+        // 초기: 첫 3~4장 즉시 워밍업 + 나머지는 아이들 시간에
+        (function warmup(){
+          const first = Math.min(total, 4);
           for (let i=0; i<first; i++){
-            const full = list[i].getAttribute('data-full');
-            if (full) preloadFull(full);
+            const full = thumbs[i].getAttribute('data-full');
+            enqueue(full);
+          }
+          if (allowAggressivePrefetch()){
+            const rest = thumbs.slice(first).map(im => im.getAttribute('data-full')).filter(Boolean);
+            (window.requestIdleCallback || setTimeout)(() => queuePrefetch(rest), { timeout: 2000 });
           }
         })();
-      }
+
+      })();
+
 
       /* 캘린더 */
       (function(){
