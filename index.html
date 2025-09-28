@@ -562,6 +562,36 @@
     .name-line .left-info{ letter-spacing: var(--track, normal); }
 
     footer{ padding:22px 0 14px; text-align:center; color:var(--muted); font-size:.9rem; }
+
+    /* === Lightbox 로딩 프로그레스 === */
+    .lb-progress{
+      position:absolute;
+      left:50%; bottom:16px; transform:translateX(-50%);
+      display:none; gap:8px; align-items:center;
+      padding:8px 10px; border-radius:999px;
+      background:rgba(0,0,0,.55); color:#fff;
+      border:1px solid rgba(255,255,255,.35);
+      backdrop-filter: blur(6px);
+      z-index: 7; /* 화살표/페이저 위 */
+      font-family: var(--font-sans);
+    }
+    .lb-progress .lb-bar{
+      position:relative; width:160px; height:6px; border-radius:999px;
+      background: rgba(255,255,255,.18); overflow:hidden; flex:0 0 auto;
+    }
+    .lb-progress .lb-bar span{
+      position:absolute; left:0; top:0; height:100%; width:0%;
+      background: linear-gradient(90deg, #ffffff, #ffdfe6);
+      border-radius:999px; transition: width .12s linear;
+    }
+    .lb-progress .lb-pct{
+      font-weight:800; font-size:.76rem; min-width:38px; text-align:right;
+    }
+    @media (max-width:560px){
+      .lb-progress{ bottom:12px; }
+      .lb-progress .lb-bar{ width:120px; }
+    }
+
   </style>
 </head>
 <body>
@@ -1705,6 +1735,32 @@
         let idx = 0;
         let touchStartX = 0;
 
+        // ====== Progress UI (생성/재사용) ======
+        let prog = lb?.querySelector('.lb-progress');
+        if (!prog && lb) {
+          const inner = lb.querySelector('.lb-inner');
+          prog = document.createElement('div');
+          prog.className = 'lb-progress';
+          prog.innerHTML = `
+            <div class="lb-bar" aria-hidden="true"><span></span></div>
+            <div class="lb-pct" aria-live="polite">0%</div>
+          `;
+          inner.appendChild(prog);
+        }
+        const bar = prog?.querySelector('.lb-bar span');
+        const pct = prog?.querySelector('.lb-pct');
+        const showProgress = () => { if (prog) { prog.style.display = 'flex'; setProgress(0); } };
+        const hideProgress = () => { if (prog) prog.style.display = 'none'; };
+        const setProgress  = (v) => {
+          if (!bar || !pct) return;
+          const p = Math.max(0, Math.min(100, Math.round(v)));
+          bar.style.width = p + '%';
+          pct.textContent = p + '%';
+        };
+
+        // 진행 중 요청 취소/정리용
+        let currentLoad = { controller: null, token: 0, objUrl: null };
+
         function totalCount() {
           return document.querySelectorAll('#gallery picture img').length;
         }
@@ -1714,6 +1770,77 @@
           pager.textContent = `${idx + 1} / ${totalCount()}`;
         }
 
+        // 원본 이미지 로드 + 진행률 표시
+        async function loadWithProgress(url) {
+          if (!url || !lbImg) return;
+
+          // 이전 요청 중단 및 정리
+          if (currentLoad.controller) { try { currentLoad.controller.abort(); } catch(_) {} }
+          if (currentLoad.objUrl) { URL.revokeObjectURL(currentLoad.objUrl); currentLoad.objUrl = null; }
+
+          const token = ++currentLoad.token;
+          const controller = new AbortController();
+          currentLoad.controller = controller;
+
+          showProgress();
+          try {
+            const resp = await fetch(url, { signal: controller.signal, cache: 'force-cache' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+            const total = Number(resp.headers.get('content-length') || 0);
+            const hasLen = Number.isFinite(total) && total > 0;
+
+            if (resp.body?.getReader) {
+              const reader = resp.body.getReader();
+              const chunks = [];
+              let loaded = 0;
+
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                loaded += value.byteLength;
+
+                // 중간에 다른 이미지로 넘어갔으면 중단
+                if (token !== currentLoad.token) return;
+
+                if (hasLen) setProgress((loaded / total) * 100);
+                else {
+                  // content-length 없을 때 점진적 표시
+                  const pseudo = Math.min(95, 40 + Math.log10(1 + loaded / 4096) * 30);
+                  setProgress(pseudo);
+                }
+              }
+
+              const blob = new Blob(chunks, { type: resp.headers.get('content-type') || 'image/jpeg' });
+              if (token !== currentLoad.token) return;
+
+              const objUrl = URL.createObjectURL(blob);
+              currentLoad.objUrl = objUrl;
+              lbImg.src = objUrl;
+              setProgress(100);
+              setTimeout(() => { if (token === currentLoad.token) hideProgress(); }, 120);
+            } else {
+              // 스트림 미지원 폴백
+              setProgress(60);
+              await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+              });
+              if (token !== currentLoad.token) return;
+              lbImg.src = url;
+              setProgress(100);
+              setTimeout(() => { if (token === currentLoad.token) hideProgress(); }, 120);
+            }
+          } catch (err) {
+            if (err.name === 'AbortError') return;
+            hideProgress();
+            console.warn('이미지 로드 실패:', err);
+          }
+        }
+
         function openAt(i) {
           if (!lb || !lbImg) return;
           const list  = document.querySelectorAll('#gallery picture img');
@@ -1721,32 +1848,27 @@
           if (!total) return;
 
           idx = (i + total) % total;
-          const t       = list[idx];
-          const full    = t.getAttribute('data-full');               // 원본
-          const thumbSrc= t.currentSrc || t.src;                     // 썸네일/현재 표시중
+          const t        = list[idx];
+          const full     = t.getAttribute('data-full');               // 원본 경로
+          const thumbSrc = t.currentSrc || t.src;                     // 썸네일/현재 표시중
 
-          // 1) 썸네일 즉시
+          // 1) 썸네일 즉시 표시
           try { lbImg.fetchPriority = 'high'; } catch(_) {}
           lbImg.src = thumbSrc;
 
-          // 2) 원본 미리 다운로드+디코드 → 같은 인덱스면 자연 교체
-          if (full) {
-            preloadFull(full).then(()=>{
-              if (!lb.classList.contains('open')) return;
-              if (document.querySelectorAll('#gallery picture img')[idx] === t) {
-                lbImg.src = full; // 최종 원본 화질
-              }
-            });
-          }
-
+          // 2) 라이트박스 열고 페이저 갱신
           lb.classList.add('open');
           updatePager();
 
-          // 3) 이웃 원본 선로딩
+          // 3) 이웃 원본 선로딩 (네트워크 여건 따라 공격적 선로딩)
           prefetchAroundIndex(idx, 2);
           if (allowAggressivePrefetch()){
-            (window.requestIdleCallback || setTimeout)(()=> prefetchAroundIndex(idx, 4), { timeout: 1200 });
+            (window.requestIdleCallback || setTimeout)(() => prefetchAroundIndex(idx, 4), { timeout: 1200 });
           }
+
+          // 4) 원본을 진행률과 함께 로드해 자연스럽게 교체
+          if (full) loadWithProgress(full);
+          else hideProgress();
         }
 
         function closeLb() {
@@ -1754,6 +1876,10 @@
           lb.classList.remove('open');
           lbImg.src = '';
           if (pager) pager.textContent = '';
+          hideProgress();
+          // 진행 중이면 취소
+          if (currentLoad.controller) { try { currentLoad.controller.abort(); } catch(_) {} }
+          if (currentLoad.objUrl) { URL.revokeObjectURL(currentLoad.objUrl); currentLoad.objUrl = null; }
         }
 
         function next() { openAt(idx + 1); }
@@ -1770,7 +1896,7 @@
           if (e.target === lb) closeLb();
         });
 
-        // ESC/화살표
+        // ESC/키보드 화살표
         document.addEventListener('keydown', (e) => {
           if (!lb?.classList.contains('open')) return;
           if (e.key === 'Escape')      closeLb();
@@ -1806,6 +1932,7 @@
           }
         })();
       }
+
       /* 캘린더 */
       (function(){
         const title = '상민 ♥ 진희 결혼식';
