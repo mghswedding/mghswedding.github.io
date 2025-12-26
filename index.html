@@ -1835,9 +1835,10 @@
             (window.requestIdleCallback || setTimeout)(() => queuePrefetch(surroundingFullUrls(idx, 4)), { timeout: 1200 });
           }
 
-          // 원본 교체 시도(캐시/메모리 → 네트워크)
-          if (full) loadWithProgress(full);
-          else hideProgress();
+          // 원본 교체 시도(캐시/메모리 → 네트워크) - 비활성화
+          // if (full) loadWithProgress(full);
+          // else hideProgress();
+          hideProgress();
         }
         function closeLb(){
           if (!lb || !lbImg) return;
